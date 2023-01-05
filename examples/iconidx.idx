@@ -1,0 +1,5 @@
+img:binary=/root/repo//examples/pics/ic.ff
+img:application/octet-stream=/root/repo/examples/pics/ic.ff
+,eie:exampleformat=/bin/example
+,eie:farbfeld=/bin/cat
+eie:image/png=/root/repo/examples/execd-icon-exteions/png.sh

@@ -1,0 +1,2 @@
+default=/usr/local/bin/feh
+text/x-c=/usr/local/bin/st -e micro
