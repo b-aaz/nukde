@@ -1,1 +1,5 @@
 *.core
+*.out
+*.orig
+test.*
+bin/*
