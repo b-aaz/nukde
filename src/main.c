@@ -66,18 +66,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MINRIPAD 30
 #define ICONHPAD 20
 
-void * trealloc(void * ptr, size_t s, size_t sn)
-{
-	void * temp;
-	printf("trealloc %ld %ld\n", s,sn);
-	temp=malloc(sn);
-	memset(temp,0,sn) ;
-	memcpy(temp,ptr,s);
-	memset(ptr,0,s) ;
-	free(ptr);
-	return temp;
-}
-
 typedef enum  {false, true} boolean;
 boolean input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,boolean * downup)
 {
