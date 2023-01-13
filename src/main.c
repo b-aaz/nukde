@@ -33,8 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <magic.h>
 #include <threads.h>
 #include <X11/Xlib.h>
-
-#define FAILSAFEICON "./icons/f.ff"
+#define REDEFFUNCS
+#include "libs/err.h"
+#define FAILSAFEICON "./examples/pics/f.ff"
 #define FAILSAFEICONIDX "./examples/iconidx.idx"
 #define FAILSAFEOPENIDX "./examples/openidx.idx"
 #define NK_INCLUDE_FIXED_TYPES
@@ -1519,7 +1520,7 @@ int main(void)
 	st.st=NAME;
 	qsort_r(files, fnum, sizeof(struct fileinfo *),&st,pstrcmp);
 	bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-	bgimage=load_image_open_resize("./icons/f.ff", de_width,de_hight);
+bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
 	struct menupos menupos;
 	menupos.isactive=false;
 
