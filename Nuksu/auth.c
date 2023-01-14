@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <string.h>
+#include "auth.h"
 
 char * findrootline(char * buffer)
 {
 	char * rootline;
-	char firstword[6];
+	char firstword[7];
 	size_t charnum;
 	for(charnum=0; charnum < strlen(buffer); charnum++)
 	{
@@ -21,6 +22,7 @@ char * findrootline(char * buffer)
 				tempcharnum++;
 			}
 			firstword[6]='\0';
+			puts(firstword);
 			tempcharnum = charnum;
 			if(strcmp(firstword, "root:$") == 0)
 			{
@@ -49,10 +51,19 @@ char * findrootline(char * buffer)
 }
 int auth(char enterdpass[],char  passfileloction[])
 {
-	char * rootline;
+	char * username = NULL;
+	char * peper = NULL;
+	char * hash = NULL;
+	char * salt = NULL;
+	char * rootline = NULL;
+	char * pepersalt = NULL;
+	char * rootlinewoj = NULL;
+	char * enterdpasshash = NULL;
+	char * enterdpasshashwun = NULL;
 	FILE * passfile = fopen(passfileloction, "r");
 	char * buffer;
 	long passfilesize;
+	const char s[2] = "$";
 	fseek(passfile, 0L, SEEK_END);
 	passfilesize = ftell(passfile);
 	fseek(passfile, 0L, SEEK_SET);
@@ -62,29 +73,28 @@ int auth(char enterdpass[],char  passfileloction[])
 	rootline = findrootline(buffer);
 	free(buffer);
 	buffer=NULL;
-	const char s[2] = "$";
-	char * un = strtok(rootline, s);
-	char * peper = strtok(NULL, s);
-	char * salt = strtok(NULL, s);
-	char * hash = strtok(NULL, ":");
-	free(rootline);
-	rootline=NULL;
-	char * rootlinewoj = (char *)calloc(1 + strlen(peper) + 1 + strlen(salt) + strlen(un) + 1 + strlen(hash) + 1,sizeof(char));
-	char * pepersalt = (char *)calloc(1 + strlen(peper)+ 1 + strlen(salt) + 1,sizeof(char));
+	username = strtok(rootline, s);
+	peper = strtok(NULL, s);
+	salt = strtok(NULL, s);
+	hash = strtok(NULL, ":");
+	rootlinewoj = (char *)malloc((1 + strlen(peper) + 1 + strlen(salt) + strlen(username) + 1 + strlen(hash) + 1)*sizeof(char));
+	pepersalt = (char *)malloc((1 + strlen(peper)+ 1 + strlen(salt) + 1)*sizeof(char));
 	strcat(pepersalt, s);
 	strcat(pepersalt, peper);
 	strcat(pepersalt, s);
 	strcat(pepersalt, salt);
-	strcat(rootlinewoj, un);
+	strcat(rootlinewoj, username);
 	strcat(rootlinewoj, pepersalt);
 	strcat(rootlinewoj, s);
 	strcat(rootlinewoj, hash);
-	char * enterdpasshash = crypt(enterdpass, pepersalt);
+	enterdpasshash = crypt(enterdpass, pepersalt);
 	free(pepersalt);
 	pepersalt=NULL;
-	char * enterdpasshashwun =
-	    (char *)calloc(strlen(un) + strlen(enterdpasshash)+1,sizeof(char));
-	strcat(enterdpasshashwun, un);
+	enterdpasshashwun =
+	    (char *)malloc((strlen(username) + strlen(enterdpasshash)+1)*sizeof(char));
+	free(rootline);
+	rootline=NULL;
+	strcat(enterdpasshashwun, username);
 	strcat(enterdpasshashwun, enterdpasshash);
 	if(strcmp(enterdpasshashwun, rootlinewoj) == 0)
 	{

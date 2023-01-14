@@ -13,7 +13,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define _USE_FILE_OFFSET64
 #include <sys/event.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,6 +60,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
+
+
 #define ICON_W 150
 #define MINLFPAD 30
 #define MINRIPAD 30
@@ -168,42 +169,11 @@ unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h)
 	return buffer;
 }
 
-
-/*unsigned char * ffread_buf(unsigned char * ffbuf,unsigned int * w,unsigned int * h)
-{
-	struct head * hh;
-	size_t filelen;
-	unsigned char * buffer;
-	size_t i=0;
-	hh=malloc(16);
-	memcpy(hh,ffbuf,16);
-	if(strcmp("farbfeld",hh->ma))
-	{
-		puts("Invalid file format1");
-		//exit(1);
-	}
-	*w=ntohl(hh->w);
-	*h=ntohl(hh->h);
-		printf("buf %d %d\n",*w,*h);
-	filelen=(*w)*(*h)*4;
-	buffer=malloc(filelen*sizeof(char));
-	for(; i<filelen; i++)
-	{
-		buffer[i]=(ntohs(ffbuf[i+15])/257);//}
-	}
-	return buffer;
-}
-*/
 unsigned char * ffread_open(const char * path,unsigned int * w,unsigned int * h)
 {
 	unsigned char * buffer;
 	FILE * file;
 	file=fopen(path,"rb");
-	if(file == NULL)
-	{
-		printf("cant open the file2 %s \n",path);
-		exit(1);
-	}
 	buffer=ffread(file,w,h);
 	fclose(file);
 	return buffer;
@@ -265,11 +235,10 @@ struct dsk_dir
 char * line_parse(size_t * n,char * data,size_t * linelength)
 {
 	char * line=NULL;
-	int typel=4;
 	if(data[*n]!='=')
 	{
 		printf("syntax erorr at %lu",*n);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	++*n;
 	while(data[*n+*linelength] != '\n')
@@ -292,7 +261,6 @@ char * check_ops(char * bigpattern,char * data,char * type)
 	char * line=NULL;
 	size_t n=0;
 	int typel=4;
-	printf("data n %c \n", data[n]) ;
 	while(data[n]==',')
 	{
 		++n;
@@ -301,14 +269,9 @@ char * check_ops(char * bigpattern,char * data,char * type)
 		{
 			n+=typel;
 		}
-		printf("data n typel %c \n", data[n]) ;
-		printf("n typel %lu \n", n) ;
 		while(data[n+pl]!='=')
 		{
-			//	printf ("data n pl%c \n", data[n]) ;
-			pl++;
-			printf("pattern le %c\n", data[n+pl]) ;
-			printf("pattern le %d\n", n+pl) ;
+			++pl;
 		}
 		if(NULL!=pattern)
 		{
@@ -352,18 +315,16 @@ char * line_wswpt(char * data, char * pattern,char * bigpattern,char * type)
 	short unsigned int typel=0;
 	pl=strlen(pattern);
 	dl=strlen(data);
-
-				if(type!=NULL)
-				{
-					typel=4;
-				}
+	if(type!=NULL)
+	{
+		typel=4;
+	}
 	while(n<dl)
 	{
 		if(n==0||data[n-1]=='\n')
 		{
 			if(strncmp(data+n+typel,pattern,pl)==0)
 			{
-			puts("dmthbg");
 				n+=typel;
 				n+=pl;
 				line=line_parse(&n,data,&linelength);
@@ -391,50 +352,6 @@ char * line_wswpt(char * data, char * pattern,char * bigpattern,char * type)
 	}
 	return NULL;
 }
-/*
-char * line_wswp(char * data, char * pattern)
-{
-	size_t n=0;
-	size_t pl=0;
-	size_t linelength=0;
-	char * line;
-	pl=strlen(pattern);
-	puts("pattern");
-	puts(pattern);
-	puts("data");
-	puts(data);
-	while(n<strlen(data))
-	{
-		if(n==0|| data[n-1]=='\n')
-		{
-			if(strncmp(data+n,pattern,pl)==0)
-			{
-				n+=pl;
-				if(data[n]!='=')
-				{
-					printf("syntax erorr %lu",n);
-					exit(1);
-				}
-				n++;
-				while(data[n+linelength] != '\n')
-				{
-					linelength++;
-				}
-				line=malloc(linelength+1);
-				strncpy(line,data+n,linelength);
-				line[linelength]='\0';
-				return line;
-			}
-			else
-			{
-			}
-		}
-		n++;
-	}
-	return NULL;
-}
-
-*/
 
 void lunch(char * openbuff,struct fileinfo f)
 {
@@ -449,7 +366,7 @@ void lunch(char * openbuff,struct fileinfo f)
 		if(programname==NULL)
 		{
 			puts("error no programs found");
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
 	}
 	lunchpath = malloc(strlen(programname)+1+strlen(f.path)+2);
@@ -470,7 +387,7 @@ struct menupos
 	struct nk_vec2 pos;
 };
 
-void nicon(struct nk_context * ctx,struct menupos * mp,char * name,struct nk_vec2 lol,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
+void nicon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
 {
 	/*
 
@@ -695,8 +612,9 @@ char * fileopentobuff(const char * path)
 	size_t fl;
 	char * buff;
 	fp=fopen(path,"r");
-	if (fp==NULL) {
-	printf ("cant open %s",path);
+	if(fp==NULL)
+	{
+		printf("cant open %s",path);
 	}
 	fseek(fp,0l,SEEK_END);
 	fl=ftell(fp);
@@ -1193,35 +1111,26 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
 				if(*fnum!=oldfnum)
 				{
 					printf("realloced from %d to %d\n", oldfnum,*fnum);
-					files=trealloc(files,oldfnum *sizeof(struct  fileinfo *),((*fnum)+10) * sizeof(struct  fileinfo *));
+					files=realloc(files,(*fnum) * sizeof(struct  fileinfo *));
 				}
 				if(new_files_names!=NULL)
 				{
-					puts("hi new fucking hell");
 					for(long int i=oldfnum-deledfiles; i<*fnum ; i++)
 					{
 						struct charnode * current;
 						printf("adding newfile to %d fnum : %d\n", i,*fnum);
-						puts("a1");
 						current = new_files_names;
-						puts("a2");
 						files[i]=new_file(desktop_dir.d_path,current->name,iconidx,magic_cookie_mime,magic_cookie_hr);
-						puts("a3");
-						printf("name check0 %s\n",files[i]->name);
-						puts("a3");
 						start_thrd_for_icon(files,i,i);
-						printf("name check %s\n",files[i]->name);
-						puts("aaaaaaaaaaaaaaaaaaaaaaaa\n\n\n\n\n\n");
 						new_files_names=new_files_names->next;
 						free(current->name);
 						free(current);
-						printf("name check2 %s\n",files[i]->name);
 					}
 				}
 			}
 			else
 			{
-				puts("no descktop folder");
+				puts("no desktop folder");
 			}
 			printf("fnum: %d\n",*fnum);
 			rewinddir(desktop_dir.d);
@@ -1233,20 +1142,20 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
 
 void loadicon(struct fileinfo * file)
 {
-					printf("gen image for name : %s\n",file->name);
-					GLuint tex;
-					glGenTextures(1, &tex);
-					glBindTexture(GL_TEXTURE_2D, tex);
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ICON_W,ICON_W, 0, GL_RGBA, GL_UNSIGNED_BYTE, file->icon_load_args.return_data);
-					glGenerateMipmap(GL_TEXTURE_2D);
-					free(file->icon_load_args.return_data);
-					*(file->return_image)=nk_image_id((int)tex);
-					file->icon_load_args.genid=false;
-					printf("done gen image for name : %s\n",file->name);
+	printf("gen image for name : %s\n",file->name);
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ICON_W,ICON_W, 0, GL_RGBA, GL_UNSIGNED_BYTE, file->icon_load_args.return_data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	free(file->icon_load_args.return_data);
+	*(file->return_image)=nk_image_id((int)tex);
+	file->icon_load_args.genid=false;
+	printf("done gen image for name : %s\n",file->name);
 }
 
 int main(void)
@@ -1261,9 +1170,9 @@ int main(void)
 	char * folder="/desktop";
 	char * hpath;
 	int kqid;
+	struct nk_vec2 lastpos;
 	struct dsk_dir desktop_dir;
 	struct dirent * dir ;
-	static struct nk_vec2 lastpos;
 	char * iconidx;
 	char * openidx;
 	magic_t magic_cookie_mime=0;
@@ -1271,33 +1180,33 @@ int main(void)
 	kqid=kqueue();
 	if(kqid == -1)
 	{
-		perror("kqueue\n\n\n\n");
+		perror("kqueue\n");
 	}
 	magic_cookie_mime = magic_open(MAGIC_MIME|MAGIC_PRESERVE_ATIME|MAGIC_SYMLINK|MAGIC_MIME_TYPE);
 	magic_cookie_hr = magic_open(MAGIC_NONE);
 	if(magic_cookie_mime == NULL)
 	{
 		printf("unable to initialize magic library\n");
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	printf("Loading default magic database\n");
 	if(magic_load(magic_cookie_mime, NULL) != 0)
 	{
 		printf("cannot load magic database - %s\n", magic_error(magic_cookie_mime));
 		magic_close(magic_cookie_mime);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	if(magic_cookie_hr == NULL)
 	{
 		printf("unable to initialize magic library\n");
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	printf("Loading default magic database\n");
 	if(magic_load(magic_cookie_hr, NULL) != 0)
 	{
 		printf("cannot load magic database - %s\n", magic_error(magic_cookie_hr));
 		magic_close(magic_cookie_hr);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 	memset(&win, 0, sizeof(win));
 	win.dpy = XOpenDisplay(NULL);
@@ -1366,7 +1275,7 @@ int main(void)
 		                        win.vis->visual, CWBorderPixel|CWColormap|CWEventMask, &win.swa);
 		if(!win.win) die("[X11]: Failed to create window\n");
 		XFree(win.vis);
-		XStoreName(win.dpy, win.win, "Demo");
+		XStoreName(win.dpy, win.win, "desk");
 		XMapWindow(win.dpy, win.win);
 		win.wm_delete_window = XInternAtom(win.dpy, "WM_DELETE_WINDOW", False);
 		XSetWMProtocols(win.dpy, win.win, &win.wm_delete_window, 1);
@@ -1380,8 +1289,8 @@ int main(void)
 		gl_err = nk_false;
 		if(!has_extension(extensions_str, "GLX_ARB_create_context") || !create_context)
 		{
-			fprintf(stdout, "[X11]: glXCreateContextAttribARB() not found...\n");
-			fprintf(stdout, "[X11]: ... using old-style GLX context\n");
+			fprintf(stderr, "[X11]: glXCreateContextAttribARB() not found...\n");
+			fprintf(stderr, "[X11]: ... using old-style GLX context\n");
 			glContext = glXCreateNewContext(win.dpy, win.fbc, GLX_RGBA_TYPE, 0, True);
 		}
 		else
@@ -1416,8 +1325,6 @@ int main(void)
 		nk_x11_font_stash_begin(&atlas);
 		nk_x11_font_stash_end();
 	}
-#ifdef INCLUDE_STYLE
-#endif
 	iconidx=fileopentobuff(FAILSAFEICONIDX);
 	openidx=fileopentobuff(FAILSAFEOPENIDX);
 	hpath=getenv("HOME");
@@ -1443,8 +1350,8 @@ int main(void)
 	}
 	else
 	{
-		puts("no descktop folder");
-		exit(0);
+		puts("No desktop folder");
+		exit(EXIT_FAILURE);
 	}
 	struct fileinfo ** files;
 	printf("%d\n",fnum);
@@ -1459,59 +1366,20 @@ int main(void)
 			fi++;
 		}
 	}
-	puts("icon thrding and io and cp and loading eie started !!!!!!!!!");
+	puts("icon thrding , io , cp and loading eie started !!!!!!!!!");
 	for(unsigned int i = 0; i<fnum ; i++)
 	{
 		printf("fis %d\n",i) ;
 		start_thrd_for_icon(files,i,i);
-		/*		printf("the itrator %d name:%s type:%s:end\n",i,files[i]->name,files[i]->icon_load_args.type);
-				if(strncmp(files[i]->icon_load_args.type,"img:",5)==0)
-				{
-					boolean iconisuniqe = true;
-					for(unsigned int i2 = 0; i2<i; i2++)
-					{
-						printf("the itrator of the internal for  %d the file itrator %u\n",i2,i);
-						if(strcmp(files[i2]->icon_load_args.icon_path,files[i]->icon_load_args.icon_path)==0)
-						{
-							iconisuniqe=false;
-							puts("got into  cpy");
-							printf("coping icon from a file with itrator of %d, the name of %s and icon path of %s : %s for use at the file with the itrator of %d and name of  %s and icon path of %s : %s \n",i2,files[i2]->name,files[i2]->icon_load_args.icon_path,files[i2]->icon_load_args.type,           i,files[i]->name,files[i]->icon_load_args.icon_path,files[i]->icon_load_args.type);
-							(files[i]->return_image)=(files[i2]->return_image);
-							break;
-						}
-					}
-					if(iconisuniqe)
-					{
-						puts("got into  thrd");
-						printf("thrd loading for %s\n",files[i]->name);
-						files[i]->return_image= malloc(sizeof(struct nk_image));
-						if(thrd_create(&(files[i]->icon_load_args.thrd),(thrd_start_t) thrd_icon_load,&(files[i]->icon_load_args))==thrd_error)
-						{
-							printf("could not make thread for %d\n",i);
-							exit(0);
-						}
-					}
-				}
-				if(strncmp(files[i]->icon_load_args.type,"eie:",5)==0)
-				{
-					puts("got into eie");
-					files[i]->return_image=malloc(sizeof(struct nk_image));
-					if(thrd_create(&(files[i]->icon_load_args.thrd),(thrd_start_t) thrd_icon_load_from_extion,(files[i]))==thrd_error)
-					{
-						printf("could not make thread for %d\n",i);
-						exit(0);
-					}
-				}*/
 	}
 	struct sortby st;
 	st.ac=1;
 	st.st=NAME;
 	qsort_r(files, fnum, sizeof(struct fileinfo *),&st,pstrcmp);
 	bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
+	bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
 	struct menupos menupos;
 	menupos.isactive=false;
-
 	while(running)
 	{
 		XEvent evt;
@@ -1527,16 +1395,9 @@ bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
 		ctx->style.window.padding = nk_vec2(0,0);
 		ctx->style.window.spacing = nk_vec2(0,0);
 		ctx->style.window.scrollbar_size = nk_vec2(0,0);
-		if(nk_begin(ctx, "Demo", nk_rect(0, 0, de_width, de_hight),0))
+		if(nk_begin(ctx, "desk", nk_rect(0, 0, de_width, de_hight),0))
 		{
 			files= updatefiles(desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
-			/*for(unsigned int gi = 0; gi<fnum ; gi++)
-			{
-				//					printf("tgen image for %d name : %s\n",gi,files[gi]->name);
-				if(files[gi]->icon_load_args.genid)
-				{
-				}
-			}*/
 			struct nk_window * win;
 			win = ctx->current;
 			nk_draw_image(&win->buffer,nk_rect(0,0,de_width,de_hight),&bgimage,nk_rgb(255,255,255));
@@ -1554,8 +1415,11 @@ bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
 					int iconnum=col+(row*maximum_cols);
 					//				printf("%d %d\n",col+(i*maximum_cols),fnum);
 					struct nk_rect icrect = nk_rect((col*(ICONHPAD+ICON_W)+MINLFPAD+calpad),(row* (ICON_W+20+50))+10, ICON_W, ICON_W+20);
-					if(files[iconnum]->icon_load_args.genid){loadicon(files[iconnum]);};
-					nicon(ctx,&menupos,files[iconnum]->name,lastpos,(files[iconnum]),openidx,icrect);
+					if(files[iconnum]->icon_load_args.genid)
+					{
+						loadicon(files[iconnum]);
+					};
+					nicon(ctx,files[iconnum]->name,(files[iconnum]),openidx,icrect);
 					if(nk_input_is_mouse_click_in_rect(&ctx->input,NK_BUTTON_RIGHT,icrect))
 					{
 						//int sif=0;
@@ -1586,7 +1450,6 @@ bgimage=load_image_open_resize(FAILSAFEICON, de_width,de_hight);
 			}
 			if(nk_input_has_mouse_click(&ctx->input,0))
 			{
-				puts("www");
 				lastpos.x=*(&ctx->input.mouse.pos.x);
 				lastpos.y=*(&ctx->input.mouse.pos.y);
 			}

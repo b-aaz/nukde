@@ -13,7 +13,7 @@
 #include        <X11/cursorfont.h>
 #include "rmchrbyidx.h"
 #include "apchrtoidx.h"
-#include "rootercleanlib.h"
+#include "auth.h"
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -22,7 +22,7 @@
 #define NK_XLIB_IMPLEMENTATION
 #define INCLUDE_STYLE
 /*#define NK_INPUT_MAX 2 */
-#include "nuklear.h"
+#include "../src/libs/nuklear.h"
 #include "nuklear_xlib.h"
 #define DTIME          20
 #define CHAR_REPEAT_DELAY 100
@@ -30,7 +30,7 @@
 #define WINDOW_HEIGHT   110
 #define CHANCES   3
 /*#define SHIFT 5*/
-#define DELAY   30 
+#define DELAY   30
 #define WARNFILE_LOCATION "/usr/share/security/nuksu"
 #define RESTC "\e[0m"
 #define ERR_COLOR "\e[38;2;237;67;55;1;5m"
@@ -38,7 +38,7 @@
 #ifdef INCLUDE_STYLE
 #include "style.c"
 #endif
-typedef enum  {	false , true}boolean;
+typedef enum  {	false, true} boolean;
 
 typedef struct XWindow XWindow;
 struct XWindow
@@ -123,7 +123,7 @@ struct pass
 
 struct lock_style
 {
-		short int lock_speed;
+	short int lock_speed;
 
 	struct nk_color shackle;
 	struct nk_color body;
@@ -247,9 +247,10 @@ void lock_icon(struct nk_context * ctx,struct nk_rect lockpos,short int speed,in
 
 
 
-struct passwords_input_data {
+struct passwords_input_data
+{
 
-	
+
 	boolean active ;
 	size_t cursor_pos;
 	size_t shift;
@@ -258,7 +259,8 @@ struct passwords_input_data {
 	int lockopeness;
 };
 
-struct passwords_input_style{
+struct passwords_input_style
+{
 	struct lock_style lockstyle;
 	struct nk_color cursor_color;
 	struct nk_color background_color;
@@ -272,220 +274,221 @@ struct passwords_input_style{
 	short unsigned int text_arias_start_padding;
 	char * label;
 };
-void password_input(struct nk_context *ctx,struct passwords_input_data *stuff,struct passwords_input_style ipstyle,struct pass *pass,XWindow xw,Cursor cu){
-			struct nk_window * win;
-			struct nk_style * style;
-			size_t s;
-			long thist;
-			float row_height;
-			struct nk_input * in;
-			const struct nk_style_edit * editstyle;
-			struct nk_rect widpos;
-			struct nk_rect text_aria;
-			short unsigned int wids_end_buff_space;
-			size_t maxchn;
-			struct nk_rect label_aria;
-			struct nk_rect lockspos;
-			int shiftvalue;
-			
-			nk_widget(&widpos, ctx);
-			in =  &ctx->input;
-			win = ctx->current;
-			style = &ctx->style;
-			editstyle = &style->edit;
-			row_height = style->font->height;
-			
-			wids_end_buff_space=widpos.h;
-			maxchn = (int)(((widpos.w - wids_end_buff_space-ipstyle.text_arias_start_padding) /ipstyle.space_betwen_charecters) );
-			text_aria.x = widpos.x + ipstyle.text_arias_start_padding;
-			text_aria.y = widpos.y + widpos.h/2-row_height/2;
-			text_aria.h = row_height;
-			shiftvalue=1;
-			text_aria.w = (pass->length - stuff->shift)*ipstyle.space_betwen_charecters;
-			if (text_aria.w>maxchn*ipstyle.space_betwen_charecters){text_aria.w=maxchn*ipstyle.space_betwen_charecters;}
-			if(nk_input_is_mouse_hovering_rect(in,widpos)){
-			
-							XDefineCursor(xw.dpy,xw.win,cu);
-							
-			}
-			else{
-				XUndefineCursor(xw.dpy,xw.win);
-			}
-			if(nk_input_has_mouse_click(in, NK_BUTTON_LEFT))
+void password_input(struct nk_context * ctx,struct passwords_input_data * stuff,struct passwords_input_style ipstyle,struct pass * pass,XWindow xw,Cursor cu)
+{
+	struct nk_window * win;
+	struct nk_style * style;
+	size_t s;
+	long thist;
+	float row_height;
+	struct nk_input * in;
+	const struct nk_style_edit * editstyle;
+	struct nk_rect widpos;
+	struct nk_rect text_aria;
+	short unsigned int wids_end_buff_space;
+	size_t maxchn;
+	struct nk_rect label_aria;
+	struct nk_rect lockspos;
+	int shiftvalue;
+	nk_widget(&widpos, ctx);
+	in =  &ctx->input;
+	win = ctx->current;
+	style = &ctx->style;
+	editstyle = &style->edit;
+	row_height = style->font->height;
+	wids_end_buff_space=widpos.h;
+	maxchn = (int)(((widpos.w - wids_end_buff_space-ipstyle.text_arias_start_padding) /ipstyle.space_betwen_charecters));
+	text_aria.x = widpos.x + ipstyle.text_arias_start_padding;
+	text_aria.y = widpos.y + widpos.h/2-row_height/2;
+	text_aria.h = row_height;
+	shiftvalue=1;
+	text_aria.w = (pass->length - stuff->shift)*ipstyle.space_betwen_charecters;
+	if(text_aria.w>maxchn*ipstyle.space_betwen_charecters)
+	{
+		text_aria.w=maxchn*ipstyle.space_betwen_charecters;
+	}
+	if(nk_input_is_mouse_hovering_rect(in,widpos))
+	{
+		XDefineCursor(xw.dpy,xw.win,cu);
+	}
+	else
+	{
+		XUndefineCursor(xw.dpy,xw.win);
+	}
+	if(nk_input_has_mouse_click(in, NK_BUTTON_LEFT))
+	{
+		if(in->mouse.pos.y > widpos.y
+		        && in->mouse.pos.y < widpos.y + widpos.h
+		        && in->mouse.pos.x > text_aria.x + text_aria.w
+		        && in->mouse.pos.x < widpos.x + widpos.w-wids_end_buff_space)
+		{
+			stuff->cursor_pos=(pass->length-stuff->shift);
+		}
+		if(in->mouse.pos.y > widpos.y
+		        && in->mouse.pos.y < widpos.y + widpos.h
+		        && in->mouse.pos.x > text_aria.x
+		        && in->mouse.pos.x < text_aria.x + text_aria.w)
+		{
+			stuff->cursor_pos = text_aria.x;
+			for(; in->mouse.pos.x > stuff->cursor_pos; stuff->cursor_pos += ipstyle.space_betwen_charecters)
 			{
-				if(in->mouse.pos.y > widpos.y 
-				&& in->mouse.pos.y < widpos.y + widpos.h 
-				&& in->mouse.pos.x > text_aria.x + text_aria.w 
-				&& in->mouse.pos.x < widpos.x + widpos.w-wids_end_buff_space)
+			}
+			stuff->cursor_pos -= text_aria.x;
+			stuff->cursor_pos /= ipstyle.space_betwen_charecters;
+			stuff->cursor_pos--;
+		}
+		if(!nk_input_is_mouse_hovering_rect(in, widpos))
+		{
+			stuff->active = 0;
+		}
+		else
+		{
+			stuff->active = 1;
+		}
+	}
+	nk_fill_rect(&win->buffer, widpos, editstyle->rounding,ipstyle.background_color);
+	if(stuff->active)
+	{
+		nk_stroke_rect(&win->buffer, widpos,editstyle->rounding,editstyle->border,ipstyle.fild_activecolor);
+		if(nk_input_is_key_down(in,NK_KEY_DEL)&&stuff->cursor_pos+stuff->shift<pass->length)
+		{
+			thist=timestamp();
+			if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
+			{
+				rmchrbyidx(pass->buf, stuff->cursor_pos+stuff->shift, 1);
+				pass->length--;
+				stuff->lastt=thist;
+			}
+		}
+		if(nk_input_is_key_down(in,NK_KEY_RIGHT)&&stuff->cursor_pos+stuff->shift<pass->length)
+		{
+			thist=timestamp();
+			if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
+			{
+				stuff->cursor_pos++;
+				if(stuff->cursor_pos>maxchn)
 				{
-					stuff->cursor_pos=(pass->length-stuff->shift);
+					stuff->shift+=shiftvalue;
+					stuff->cursor_pos-=shiftvalue;
 				}
-				if(in->mouse.pos.y > widpos.y
-				        && in->mouse.pos.y < widpos.y + widpos.h 
-				        && in->mouse.pos.x > text_aria.x
-				        && in->mouse.pos.x < text_aria.x + text_aria.w)
+				stuff->lastt=thist;
+			}
+		}
+		if(nk_input_is_key_down(in, NK_KEY_LEFT))
+		{
+			thist=timestamp();
+			if(thist-stuff->lastt>=CHAR_REPEAT_DELAY && (stuff->cursor_pos||stuff->shift))
+			{
+				if(stuff->shift!=0&&stuff->cursor_pos==0)
 				{
-					stuff->cursor_pos = text_aria.x;
-					for(; in->mouse.pos.x > stuff->cursor_pos; stuff->cursor_pos += ipstyle.space_betwen_charecters)
-					{
-					}
-					stuff->cursor_pos -= text_aria.x;
-					stuff->cursor_pos /= ipstyle.space_betwen_charecters;
+					stuff->shift-=shiftvalue;
+					stuff->cursor_pos+=shiftvalue;
+				}
+				stuff->cursor_pos--;
+				stuff->lastt=thist;
+			}
+		}
+		if(nk_input_is_key_down(in, NK_KEY_BACKSPACE)&&(stuff->cursor_pos||stuff->shift))
+		{
+			thist=timestamp();
+			if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
+			{
+				rmchrbyidx(pass->buf, stuff->cursor_pos - 1+stuff->shift, 1);
+				if(stuff->shift)
+				{
+					stuff->shift-=shiftvalue;
+				}
+				else
+				{
 					stuff->cursor_pos--;
 				}
-				if(!nk_input_is_mouse_hovering_rect(in, widpos))
+				pass->length--;
+				stuff->lastt=thist;
+				if(stuff->shift!=0&&stuff->cursor_pos==0)
 				{
-					stuff->active = 0;
-				}
-				else
-				{
-					stuff->active = 1;
+					stuff->shift-=shiftvalue;
+					stuff->cursor_pos+=shiftvalue;
 				}
 			}
-			nk_fill_rect(&win->buffer, widpos, editstyle->rounding,ipstyle.background_color);
-			if(stuff->active)
+		}
+		if(in->keyboard.text_len)
+		{
+			if(pass->length >= pass->bufsize)
 			{
-				nk_stroke_rect(&win->buffer, widpos,editstyle->rounding,editstyle->border,ipstyle.fild_activecolor );
-				if(nk_input_is_key_down(in,NK_KEY_DEL)&&stuff->cursor_pos+stuff->shift<pass->length)
-				{
-					thist=timestamp();
-					if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
-					{
-						rmchrbyidx(pass->buf, stuff->cursor_pos+stuff->shift, 1);
-						pass->length--;
-						stuff->lastt=thist;
-					}
-				}
-				if(nk_input_is_key_down(in,NK_KEY_RIGHT)&&stuff->cursor_pos+stuff->shift<pass->length)
-				{
-					thist=timestamp();
-					if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
-					{
-						stuff->cursor_pos++;
-						if(stuff->cursor_pos>maxchn)
-						{
-							stuff->shift+=shiftvalue;
-							stuff->cursor_pos-=shiftvalue;
-						}
-						stuff->lastt=thist;
-					}
-				}
-				if(nk_input_is_key_down(in, NK_KEY_LEFT))
-				{
-					thist=timestamp();
-					if(thist-stuff->lastt>=CHAR_REPEAT_DELAY && (stuff->cursor_pos||stuff->shift))
-					{
-						if(stuff->shift!=0&&stuff->cursor_pos==0)
-						{
-							stuff->shift-=shiftvalue;
-							stuff->cursor_pos+=shiftvalue;
-						}
-												stuff->cursor_pos--;
-						stuff->lastt=thist;
-					}
-				}
-				if(nk_input_is_key_down(in, NK_KEY_BACKSPACE)&&(stuff->cursor_pos||stuff->shift))
-				{
-					thist=timestamp();
-					if(thist-stuff->lastt>=CHAR_REPEAT_DELAY)
-					{
-						rmchrbyidx(pass->buf, stuff->cursor_pos - 1+stuff->shift, 1);
-						if (stuff->shift){
-							stuff->shift-=shiftvalue;
-						}
-						else {
-							stuff->cursor_pos--;
-						}
-						pass->length--;
-						stuff->lastt=thist;
-						if(stuff->shift!=0&&stuff->cursor_pos==0)
-						{
-							stuff->shift-=shiftvalue;
-							stuff->cursor_pos+=shiftvalue;
-						}
-					}
-				}
-				if(in->keyboard.text_len )
-				{
-					if(pass->length >= pass->bufsize)
-					{
-						pass->buf = realloc(pass->buf, (pass->length + 32));
-						pass->bufsize =+32;
-					}
-					apchrtoidx(pass->buf, pass->length, in->keyboard.text,in->keyboard.text_len, stuff->cursor_pos+stuff->shift);
-					stuff->cursor_pos+=in->keyboard.text_len;
-					pass->length+=in->keyboard.text_len;
-					if(stuff->cursor_pos>maxchn-1)
-					{
-						stuff->cursor_pos-=in->keyboard.text_len;
-						stuff->shift+=in->keyboard.text_len;
-					}
-
-					
-				}
-				nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+ (stuff->cursor_pos * ipstyle.space_betwen_charecters),text_aria.y, 
-				0," ", 1, row_height, style->font,ipstyle.cursor_color,ipstyle.cursor_color, nk_true);
+				pass->buf = realloc(pass->buf, (pass->length + 32));
+				pass->bufsize =+32;
+			}
+			apchrtoidx(pass->buf, pass->length, in->keyboard.text,in->keyboard.text_len, stuff->cursor_pos+stuff->shift);
+			stuff->cursor_pos+=in->keyboard.text_len;
+			pass->length+=in->keyboard.text_len;
+			if(stuff->cursor_pos>maxchn-1)
+			{
+				stuff->cursor_pos-=in->keyboard.text_len;
+				stuff->shift+=in->keyboard.text_len;
+			}
+		}
+		nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+ (stuff->cursor_pos * ipstyle.space_betwen_charecters),text_aria.y,
+		                  0," ", 1, row_height, style->font,ipstyle.cursor_color,ipstyle.cursor_color, nk_true);
+	}
+	else
+	{
+		nk_stroke_rect(&win->buffer, widpos, editstyle->rounding, editstyle->border,ipstyle.fild_inactivecolor);
+	}
+	if(stuff->showpass)
+	{
+		/*show*/
+		for(s = 0; ((s < (pass->length-stuff->shift))  && (s < maxchn)); s++)
+		{
+			if(s == stuff->cursor_pos&&stuff->active)
+			{
+				nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y,
+				                  0, &pass->buf[s+stuff->shift], 1, row_height, style->font, ipstyle.pass_textcolor, ipstyle.pass_backgroundcolor, nk_true);
 			}
 			else
 			{
-				nk_stroke_rect(&win->buffer, widpos, editstyle->rounding, editstyle->border,ipstyle.fild_inactivecolor);
+				nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y,
+				                  0, &pass->buf[s+stuff->shift], 1, row_height, style->font, ipstyle.pass_backgroundcolor, ipstyle.pass_textcolor, nk_false);
 			}
-			if(stuff->showpass)
+		}
+	}
+	else
+	{
+		/*hide*/
+		for(s = 0; (s < (pass->length-stuff->shift) && (s < maxchn)); s++)
+		{
+			if(s == stuff->cursor_pos&&stuff->active)
 			{
-				/*show*/
-				for(s = 0; ((s < (pass->length-stuff->shift))  && (s < maxchn)); s++)
-				{
-					if(s == stuff->cursor_pos&&stuff->active)
-					{
-						nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y, 
-						0, &pass->buf[s+stuff->shift], 1, row_height, style->font, ipstyle.pass_textcolor, ipstyle.pass_backgroundcolor, nk_true);
-					}
-					else
-					{
-						nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y, 
-						0, &pass->buf[s+stuff->shift], 1, row_height, style->font, ipstyle.pass_backgroundcolor, ipstyle.pass_textcolor, nk_false);
-					}
-				}
+				nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y,
+				                  0, "*", 1, row_height, style->font,ipstyle.pass_textcolor,ipstyle.pass_backgroundcolor, nk_true);
 			}
 			else
 			{
-				/*hide*/ 
-				for(s = 0; (s < (pass->length-stuff->shift) && (s < maxchn)); s++)
-				{
-					if(s == stuff->cursor_pos&&stuff->active)
-					{
-						nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y, 
-						0, "*", 1, row_height, style->font,ipstyle.pass_textcolor ,ipstyle.pass_backgroundcolor , nk_true);
-					}
-					else
-					{
-						nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y, 
-						0, "*", 1, row_height, style->font, ipstyle.pass_backgroundcolor, ipstyle.pass_textcolor, nk_false);
-					}
-				}
+				nk_edit_draw_text(&win->buffer, &style->edit,text_aria.x+(s*ipstyle.space_betwen_charecters),text_aria.y,
+				                  0, "*", 1, row_height, style->font, ipstyle.pass_backgroundcolor, ipstyle.pass_textcolor, nk_false);
 			}
-			if(!pass->length)
-			{
-				label_aria.y=text_aria.y;
-				label_aria.x=text_aria.x+ipstyle.space_betwen_charecters;
-				label_aria.w=ipstyle.space_betwen_charecters*maxchn;
-				label_aria.h=row_height;
-				nk_draw_text(&win->buffer,label_aria,ipstyle.label+1,nk_strlen(ipstyle.label)-1,style->font,ipstyle.label_backgroundcolor,ipstyle.label_textcolor);
-				if(stuff->active)
-				{
-					nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x,text_aria.y, 0,&ipstyle.label[0], 
-					1, row_height,style->font,ipstyle.cursor_color,ipstyle.label_textcolor , nk_true);
-				}
-				else
-				{
-					nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x,text_aria.y, 0,&ipstyle.label[0], 
-					1, row_height,style->font,ipstyle.label_backgroundcolor,ipstyle.label_textcolor, nk_false);
-				}
-			}
-			lockspos=nk_rect(widpos.x+widpos.w-widpos.h,widpos.y,widpos.h,widpos.h);
-			lock_icon(ctx,lockspos,ipstyle.lockstyle.lock_speed,&stuff->lockopeness,&stuff->showpass,ipstyle.lockstyle);
-			/*nk_fill_rect(&win->buffer,text_aria,0,nk_rgb(255,0,0));*/
-			
+		}
+	}
+	if(!pass->length)
+	{
+		label_aria.y=text_aria.y;
+		label_aria.x=text_aria.x+ipstyle.space_betwen_charecters;
+		label_aria.w=ipstyle.space_betwen_charecters*maxchn;
+		label_aria.h=row_height;
+		nk_draw_text(&win->buffer,label_aria,ipstyle.label+1,nk_strlen(ipstyle.label)-1,style->font,ipstyle.label_backgroundcolor,ipstyle.label_textcolor);
+		if(stuff->active)
+		{
+			nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x,text_aria.y, 0,&ipstyle.label[0],
+			                  1, row_height,style->font,ipstyle.cursor_color,ipstyle.label_textcolor, nk_true);
+		}
+		else
+		{
+			nk_edit_draw_text(&win->buffer, &style->edit, text_aria.x,text_aria.y, 0,&ipstyle.label[0],
+			                  1, row_height,style->font,ipstyle.label_backgroundcolor,ipstyle.label_textcolor, nk_false);
+		}
+	}
+	lockspos=nk_rect(widpos.x+widpos.w-widpos.h,widpos.y,widpos.h,widpos.h);
+	lock_icon(ctx,lockspos,ipstyle.lockstyle.lock_speed,&stuff->lockopeness,&stuff->showpass,ipstyle.lockstyle);
+	/*nk_fill_rect(&win->buffer,text_aria,0,nk_rgb(255,0,0));*/
 }
 
 
@@ -538,26 +541,24 @@ int main(int argc,char * argv[])
 {
 	long dt;
 	long started;
-		struct nk_context * ctx;
+	struct nk_context * ctx;
 	boolean running = 1;
 	boolean warn=0;
 	time_t utime=0;
-		short int tries=0;
+	short int tries=0;
 	XWindow xw;
 	struct pass pass;
 	FILE * init;
-
-
-
-			struct passwords_input_data pd ;
-			pd.active=0;			
-			pd.lockopeness=0;			
-			pd.lastt=0;			
-			pd.shift=0;			
-			pd.cursor_pos=0;			
-			pd.showpass=0;			
-	if(argc==1){
-		die ("No programs specified ");
+	struct passwords_input_data pd ;
+	pd.active=0;
+	pd.lockopeness=0;
+	pd.lastt=0;
+	pd.shift=0;
+	pd.cursor_pos=0;
+	pd.showpass=0;
+	if(argc==1)
+	{
+		die("No programs specified ");
 	}
 	if(access(WARNFILE_LOCATION,F_OK))
 	{
@@ -571,7 +572,6 @@ int main(int argc,char * argv[])
 	pass.bufsize = 2;
 	pass.length=0;
 	pass.buf = malloc(pass.bufsize * sizeof(char));
-	
 	memset(&xw, 0, sizeof xw);
 	xw.dpy = XOpenDisplay(NULL);
 	if(!xw.dpy)
@@ -617,9 +617,9 @@ int main(int argc,char * argv[])
 			nk_xlib_handle_event(xw.dpy, xw.screen, xw.win, &evt);
 		}
 		nk_input_end(ctx);
-	XGetWindowAttributes(xw.dpy, xw.win, &xw.attr);
-	xw.width = (unsigned int) xw.attr.width;
-	xw.height = (unsigned int) xw.attr.height;
+		XGetWindowAttributes(xw.dpy, xw.win, &xw.attr);
+		xw.width = (unsigned int) xw.attr.width;
+		xw.height = (unsigned int) xw.attr.height;
 		if(nk_begin(ctx, "Demo", nk_rect(0, 0,xw.width,xw.height),0))
 		{
 			struct nk_window * win;
@@ -631,15 +631,12 @@ int main(int argc,char * argv[])
 			char warning [100];
 			FILE * warnfile;
 			Cursor cu;
-//warning 
+			//warning
 			cu = XCreateFontCursor(xw.dpy,XC_xterm);
-			
 			win = ctx->current;
 			style = &ctx->style;
-
 			warningtext.text =nk_rgb(0,0,0);
 			warningtext.background =nk_rgb(255,0,0);
-			
 			nk_layout_row_dynamic(ctx, 30, 1);
 			pds.cursor_color=nk_rgb(255,255,255);
 			pds.background_color=nk_rgb(68,71,90);
@@ -712,10 +709,10 @@ int main(int argc,char * argv[])
 				else
 				{
 					snprintf(warning,100,"Wrong password %d more tries",CHANCES-tries);
-				nk_layout_row_dynamic(ctx, 25, 1);
-				nk_widget(&warnwidpos,ctx);
-				nk_fill_rect(&win->buffer, warnwidpos,5, nk_rgb(255,0,0));
-				nk_widget_text(&win->buffer,warnwidpos,warning,nk_strlen(warning),&warningtext,NK_TEXT_CENTERED,style->font);
+					nk_layout_row_dynamic(ctx, 25, 1);
+					nk_widget(&warnwidpos,ctx);
+					nk_fill_rect(&win->buffer, warnwidpos,5, nk_rgb(255,0,0));
+					nk_widget_text(&win->buffer,warnwidpos,warning,nk_strlen(warning),&warningtext,NK_TEXT_CENTERED,style->font);
 				}
 			}
 		}
@@ -762,7 +759,6 @@ cleanup:
 
 
 
-		
 
 
 
@@ -788,4 +784,5 @@ cleanup:
 
 
 
-				
+
+
