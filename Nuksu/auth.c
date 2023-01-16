@@ -1,15 +1,17 @@
+/*auth for freebsd*/
+//#define AUTH_DEBG
+#define USERNAME "root:"
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
-#include "auth.h"
-
-char * findrootline(char * buffer)
+#define REDEFFUNCS
+#include "../src/libs/err.h"
+static char * findrootusersuserline(char * buffer)
 {
-	char * rootline;
+	char * rootusersuserline=NULL;
 	char firstword[7];
-	size_t charnum;
+	size_t charnum=0;
 	for(charnum=0; charnum < strlen(buffer); charnum++)
 	{
 		if(buffer[(charnum-1)] == '\n' || charnum == 0)
@@ -22,9 +24,8 @@ char * findrootline(char * buffer)
 				tempcharnum++;
 			}
 			firstword[6]='\0';
-			puts(firstword);
 			tempcharnum = charnum;
-			if(strcmp(firstword, "root:$") == 0)
+			if(strcmp(firstword, USERNAME"$") == 0)
 			{
 				int linesize = 0;
 				while(buffer[tempcharnum] != '\n')
@@ -33,83 +34,100 @@ char * findrootline(char * buffer)
 					tempcharnum++;
 				}
 				linesize++;
-				rootline = (char *)malloc(linesize * sizeof(char)+1);
+				rootusersuserline = (char *)malloc(linesize * sizeof(char)+1);
 				tempcharnum = charnum;
 				int j = 0;
 				while(j < linesize)
 				{
-					rootline[j]=buffer[tempcharnum];
+					rootusersuserline[j]=buffer[tempcharnum];
 					tempcharnum++;
 					j++;
 				}
-				rootline[j+1]='\0';
+				rootusersuserline[j+1]='\0';
 				break;
 			}
 		}
 	}
-	return rootline;
+	return rootusersuserline;
+
 }
-int auth(char enterdpass[],char  passfileloction[])
+static void freen(void ** p){
+free(*p);
+*p=NULL;
+}
+#define free(x) freen((void**)&(x))
+int auth(char *enterdpass,char  *passfileloction)
 {
-	char * username = NULL;
-	char * peper = NULL;
-	char * hash = NULL;
-	char * salt = NULL;
-	char * rootline = NULL;
-	char * pepersalt = NULL;
-	char * rootlinewoj = NULL;
-	char * enterdpasshash = NULL;
-	char * enterdpasshashwun = NULL;
-	FILE * passfile = fopen(passfileloction, "r");
-	char * buffer;
-	long passfilesize;
-	const char s[2] = "$";
+	char * rootusersuserline=NULL;
+	FILE * passfile=NULL;
+	char * buffer=NULL;
+	long passfilesize=0;
+	char * peper=NULL;
+	char * salt=NULL;
+	char * hash=NULL;
+	char * pepersalt=NULL;
+	char * rootusershash=NULL;
+	char * enterdpasshash=NULL;
+	size_t peperl=0;
+	size_t pepersaltl=0;
+	size_t saltl=0;
+	size_t hashl=0;
+	passfile=fopen(passfileloction, "r");
 	fseek(passfile, 0L, SEEK_END);
 	passfilesize = ftell(passfile);
 	fseek(passfile, 0L, SEEK_SET);
 	buffer = (char *)malloc(passfilesize + 1);
 	fread(buffer, sizeof(char), passfilesize, passfile);
 	fclose(passfile);
-	rootline = findrootline(buffer);
+	rootusersuserline = findrootusersuserline(buffer);
 	free(buffer);
-	buffer=NULL;
-	username = strtok(rootline, s);
-	peper = strtok(NULL, s);
-	salt = strtok(NULL, s);
+
+	strtok(rootusersuserline, "$");
+	peper = strtok(NULL, "$");
+	peperl = strlen (peper) ;
+	salt = strtok(NULL, "$");
+	saltl = strlen (salt) ;
 	hash = strtok(NULL, ":");
-	rootlinewoj = (char *)malloc((1 + strlen(peper) + 1 + strlen(salt) + strlen(username) + 1 + strlen(hash) + 1)*sizeof(char));
-	pepersalt = (char *)malloc((1 + strlen(peper)+ 1 + strlen(salt) + 1)*sizeof(char));
-	strcat(pepersalt, s);
-	strcat(pepersalt, peper);
-	strcat(pepersalt, s);
-	strcat(pepersalt, salt);
-	strcat(rootlinewoj, username);
-	strcat(rootlinewoj, pepersalt);
-	strcat(rootlinewoj, s);
-	strcat(rootlinewoj, hash);
+	hashl= strlen(hash);
+	free(rootusersuserline);
+
+	pepersaltl=1+peperl+1+saltl;
+	
+	pepersalt = (char *)malloc((1 + peperl+ 1 + saltl + 1)*sizeof(char));
+	pepersalt[0]='$';
+	strncpy(pepersalt+1, peper,peperl);
+	pepersalt[peperl+1]='$';
+	strncpy(pepersalt+peperl+2, salt, saltl);
+	pepersalt[pepersaltl]='\0';
+	free(peper);
+	free(salt);
+	
+	rootusershash = (char *)malloc((pepersaltl+1+ hashl+ 1)*sizeof(char));
+	strncpy(rootusershash, pepersalt,pepersaltl);
+	rootusershash[pepersaltl]='$';
+	strncpy(rootusershash+pepersaltl+1, hash,hashl);
+	rootusershash[hashl+pepersaltl+1]='\0';
+	free(hash);
+	
 	enterdpasshash = crypt(enterdpass, pepersalt);
 	free(pepersalt);
-	pepersalt=NULL;
-	enterdpasshashwun =
-	    (char *)malloc((strlen(username) + strlen(enterdpasshash)+1)*sizeof(char));
-	free(rootline);
-	rootline=NULL;
-	strcat(enterdpasshashwun, username);
-	strcat(enterdpasshashwun, enterdpasshash);
-	if(strcmp(enterdpasshashwun, rootlinewoj) == 0)
+#ifdef AUTH_DEBG
+	printf("hash of enterd pass:\n"
+	"%s\n"
+	"the real hash\n"
+	"%s\n"
+	,enterdpasshash,rootusershash);
+#endif
+	if(strcmp(enterdpasshash, rootusershash) == 0)
 	{
-		free(rootlinewoj);
-		rootlinewoj=NULL;
-		free(enterdpasshashwun);
-		enterdpasshashwun=NULL;
+		free(enterdpasshash);
+		free(rootusershash);
 		return 1;
 	}
 	else
 	{
-		free(rootlinewoj);
-		rootlinewoj=NULL;
-		free(enterdpasshashwun);
-		enterdpasshashwun=NULL;
+		free(rootusershash);
+		free(enterdpasshash);
 		return 0;
 	}
 }
