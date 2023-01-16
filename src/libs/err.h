@@ -12,7 +12,6 @@
 #define ERRCOLOR ""
 #define ERRCOLORRE ""
 
-static void errno_die(const char * line,const char * pfunc,const char * file,const char * fmt,...);
 
 
 FILE * fopen_e(const char * path,const char * mode,const char * line,const char * fun,const char * file);
