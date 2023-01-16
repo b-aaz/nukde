@@ -1,5 +1,5 @@
 /*auth for freebsd*/
-//#define AUTH_DEBG
+/*#define AUTH_DEBG*/
 #define USERNAME "root:"
 #include <memory.h>
 #include <stdio.h>
@@ -28,6 +28,7 @@ static char * findrootusersuserline(char * buffer)
 			if(strcmp(firstword, USERNAME"$") == 0)
 			{
 				int linesize = 0;
+				int j = 0;
 				while(buffer[tempcharnum] != '\n')
 				{
 					linesize++;
@@ -36,7 +37,6 @@ static char * findrootusersuserline(char * buffer)
 				linesize++;
 				rootusersuserline = (char *)malloc(linesize * sizeof(char)+1);
 				tempcharnum = charnum;
-				int j = 0;
 				while(j < linesize)
 				{
 					rootusersuserline[j]=buffer[tempcharnum];
