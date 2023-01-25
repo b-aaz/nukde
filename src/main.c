@@ -387,31 +387,16 @@ struct menupos
 	struct nk_vec2 pos;
 };
 
-void nicon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
+void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
 {
-	/*
-
-
-
-
-
-	     enum nk_widget_layout_states state;
-	    state = nk_widget(&bounds, ctx);
-	    if (!state) return 0;
-	    in = (state == NK_WIDGET_ROM || layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-	*/
-	//nk_layout_row_dynamic(ctx, 30, 2);
-	//nk_button_label(ctx, "button");
 	struct nk_window * win;
 	struct nk_text text ;
-	struct nk_input * in;
+	struct nk_input *in;
+	win = ctx->current;
 	in =  &ctx->input;
 	text.padding =nk_vec2(0,0);
 	text.background = nk_rgb(0,0,0);
 	text.text = nk_rgb(250,250,250);
-	win = ctx->current;
-	if(in)
-	{
 		if(nk_input_is_mouse_hovering_rect(in,icrect))
 		{
 			if(in->mouse.buttons[NK_BUTTON_LEFT].down)
@@ -419,7 +404,6 @@ void nicon(struct nk_context * ctx,char * name,struct fileinfo * file,char * ope
 				nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,42));
 				if(in->mouse.buttons[NK_BUTTON_LEFT].clicked)
 				{
-					puts("gg");
 					lunch(openbuff, *file);
 				}
 			}
@@ -427,7 +411,6 @@ void nicon(struct nk_context * ctx,char * name,struct fileinfo * file,char * ope
 			nk_stroke_rect(&win->buffer,icrect,0,2,nk_rgba(250,250,250,32));
 			nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,32));
 		}
-	}
 	nk_widget_text(&win->buffer,icrect,name,nk_strlen(name),&text,NK_TEXT_ALIGN_CENTERED|NK_TEXT_ALIGN_BOTTOM,ctx->style.font);
 	nk_draw_image(&win->buffer,nk_rect(icrect.x,icrect.y,icrect.w,icrect.w),file->return_image,nk_rgb(255,255,255));
 }
@@ -1419,7 +1402,7 @@ int main(void)
 					{
 						loadicon(files[iconnum]);
 					};
-					nicon(ctx,files[iconnum]->name,(files[iconnum]),openidx,icrect);
+					draw_icon(ctx,files[iconnum]->name,(files[iconnum]),openidx,icrect);
 					if(nk_input_is_mouse_click_in_rect(&ctx->input,NK_BUTTON_RIGHT,icrect))
 					{
 						//int sif=0;
