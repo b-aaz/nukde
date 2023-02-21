@@ -3,4 +3,7 @@
 *.orig
 test.*
 *~
-bin/*
+.*~
+*.sw*
+*/bin/*
+trash

@@ -1,0 +1,4 @@
+default=/usr/local/bin/feh
+text/x-c=/usr/local/bin/st -e vim
+import sys
+text/x-script.python=/usr/local/bin/st -e python3.9 
