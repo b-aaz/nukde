@@ -13,7 +13,12 @@
 #define ERRCOLORRE ""
 
 
+void die_e(const char * line,const char * pfunc,const char * file,const char * fmt,...);
 
+#ifdef REDEFFUNCS
+#define die dieE
+#endif
+#define dieE(fmt,...) die_e(TOSTRIFY(__LINE__) , __func__ , __FILE__,fmt,__VA_ARGS__)
 FILE * fopen_e(const char * path,const char * mode,const char * line,const char * fun,const char * file);
 
 #ifdef REDEFFUNCS

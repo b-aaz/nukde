@@ -11,16 +11,28 @@
 #define ERRCOLOR ""
 #define ERRCOLORRE ""
 
+static void die_ve(const char * line,const char * pfunc,const char * file,const char * fmt,va_list lastwords)
+{
+	fprintf(stderr,ERRCOLORRE"%s:%s:%s:%s:%s ",file,__DATE__,__TIME__,line,pfunc);
+	vfprintf(stderr,fmt,lastwords);
+	fputs(ERRCOLORRE"\n",stderr);
+	exit(EXIT_FAILURE);
+}
 static void errno_die(const char * line,const char * pfunc,const char * file,const char * fmt,...)
 {
+	fprintf(stderr,ERRCOLOR"%s: " , strerror(errno));
 	va_list lastwords;
-	fprintf(stderr,ERRCOLORRE"%s:%s:%s:%s:%s:%s: ",file,__DATE__,__TIME__,line,pfunc,strerror(errno));
 	va_start(lastwords,fmt);
-	vfprintf(stderr,fmt,lastwords);
+	die_ve(line,pfunc,file,fmt,lastwords);
 	va_end(lastwords);
-	fputs(ERRCOLORRE"\n",stderr);
-	//fflush();
-	exit(EXIT_FAILURE);
+}
+
+void die_e(const char * line,const char * pfunc,const char * file,const char * fmt,...)
+{
+	va_list lastwords;
+	va_start(lastwords,fmt);
+	die_ve(line,pfunc,file,fmt,lastwords);
+	va_end(lastwords);
 }
 
 FILE * fopen_e(const char * path,const char * mode,const char * line,const char * fun,const char * file)
