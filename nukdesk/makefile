@@ -7,13 +7,11 @@ BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
 CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
 OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o
-COOBFILES=$(COBINDIR)err.o
+COOBFILES=
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
-	cc $^ $(CFLAGS) -o $@ -lstdthreads -lX11 -lm -lGL -lGLU -lmagic 
+	cc  $(OBFILES) $(COOBFILES) $(CFLAGS) -o $@ -lstdthreads -lX11 -lm -lGL -lGLU -lmagic 
 $(BINDIR)nusort.o: $(LIBS)nusort.c 
-	cc -c $^ $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c 
-	cc -c $^  $(LIBCFLAGS) $(CFLAGS) -o $@
-$(COBINDIR)err.o:$(COLIBS)err.c 
-	cc -c $^  $(LIBCFLAGS) $(CFLAGS) -o $@
+	cc -c   $(LIBS)nusort.c $(LIBCFLAGS) $(CFLAGS) -o $@
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h 
+	cc -c  $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@

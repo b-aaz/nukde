@@ -32,7 +32,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <magic.h>
 #include <threads.h>
 #include <X11/Xlib.h>
-#define REDEFFUNCS
+
+#define NUERRREDEFFUNCS
+#define NUERRSTDIO 
+#define NUERRSTDLIB
+#define NUERRCOLOR ""
+#define NUERRCOLORRE ""
 #include "../../colibs/err.h"
 #define FAILSAFEICON "../examples/pics/err.ff"
 #define BGIMAGE "../examples/pics/bg.ff"
