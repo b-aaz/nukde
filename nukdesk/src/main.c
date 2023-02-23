@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <time.h>
 #include <limits.h>
-#include <arpa/inet.h>
-#include <sys/endian.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <magic.h>
@@ -59,6 +57,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <nuklear.h>
 #include "lib/nuklear_xlib_gl3.h"
 #include "lib/nusort.h"
+#include "lib/ffload.h"
 #include <GL/glext.h>
 
 #define WINDOW_WIDTH 1200
@@ -104,18 +103,6 @@ static int gl_error_handler(Display * dpy, XErrorEvent * ev)
     gl_err = nk_true;
     return 0;
 }
-/*
-static void
-die(const char * fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fputs("\n", stderr);
-	exit(EXIT_FAILURE);
-}
-*/
 static int
 has_extension(const char * string, const char * ext)
 {
@@ -140,50 +127,6 @@ has_extension(const char * string, const char * ext)
 
 
 
-
-struct head
-{
-    char ma [7];
-    unsigned int w;
-    unsigned int h;
-};
-
-unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h)
-{
-    struct head hh= {0};
-    size_t filelen;
-    unsigned char * buffer;
-    unsigned short  temp=0;
-    size_t i=0;
-    //hh=malloc(16);
-    fread(&hh,16,1,file);
-    if(strcmp("farbfeld",hh.ma))
-    {
-        puts("Invalid file format1");
-        //		exit(1);
-    }
-    *w=ntohl(hh.w);
-    *h=ntohl(hh.h);
-    printf("%d %d\n",*w,*h);
-    filelen=(*w)*(*h)*4;
-    buffer=malloc(filelen*sizeof(char));
-    for(; i<filelen; i++)
-    {
-        fread(&temp,2,1,file);//==1)//{
-        buffer[i]=(ntohs(temp)/257);//}
-    }
-    return buffer;
-}
-
-unsigned char * ffread_open(const char * path,unsigned int * w,unsigned int * h)
-{
-    unsigned char * buffer;
-    FILE * file;
-    file=fopen(path,"rb");
-    buffer=ffread(file,w,h);
-    fclose(file);
-    return buffer;
-}
 
 int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
 {

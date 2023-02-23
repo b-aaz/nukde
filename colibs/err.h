@@ -1,7 +1,9 @@
 #ifndef NUERR
 #define NUERR
 #include<stdio.h>
+#include <stdarg.h>
 #include<errno.h>
+#include<string.h>
 #define STRIFY(x) #x
 #define NIFY(x) x
 #define TOSTRIFY(x) STRIFY(x)
@@ -25,7 +27,7 @@ static void errno_die(const char * line,const char * pfunc,const char * file,con
 
 
 
-void die_e(const char * line,const char * pfunc,const char * file,const char * fmt,...)
+static void die_e(const char * line,const char * pfunc,const char * file,const char * fmt,...)
 {
 	va_list lastwords;
 	va_start(lastwords,fmt);
@@ -39,7 +41,7 @@ void die_e(const char * line,const char * pfunc,const char * file,const char * f
 #define dieE(fmt,...) die_e(TOSTRIFY(__LINE__) , __func__ , __FILE__,fmt,__VA_ARGS__)
 
 #ifdef NUERRSTDIO 
-FILE * fopen_e(const char * path,const char * mode,const char * line,const char * fun,const char * file)
+static FILE * fopen_e(const char * path,const char * mode,const char * line,const char * fun,const char * file)
 {
 	FILE * re = fopen(path,mode);
 	if(re==NULL)
@@ -55,7 +57,7 @@ FILE * fopen_e(const char * path,const char * mode,const char * line,const char 
 #endif
 
 #ifdef NUERRSTDLIB
-void * malloc_e(size_t size,const char * line,const char * fun,const char * file)
+static void * malloc_e(size_t size,const char * line,const char * fun,const char * file)
 {
 	void * re = malloc(size);
 	if(re==NULL)
