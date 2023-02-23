@@ -542,10 +542,6 @@ char * fileopentobuff(const char * path)
     size_t fl;
     char * buff;
     fp=fopen(path,"r");
-    if(fp==NULL)
-    {
-        printf("cant open %s",path);
-    }
     fseek(fp,0l,SEEK_END);
     fl=ftell(fp);
     fseek(fp,0L,SEEK_SET);
@@ -553,7 +549,6 @@ char * fileopentobuff(const char * path)
     fread(buff,fl, 1,fp);
     fclose(fp);
     buff[fl]='\0';
-    printf(" fileopentobuff start|%s|end\n[7~",buff);
     return buff;
 }
 
@@ -1087,7 +1082,7 @@ void loadicon(struct fileinfo * file)
 
 int main(void)
 {
-    unsigned int de_hight,de_width;
+    unsigned int desktop_hight,desktop_width;
     struct nk_image  bgimage;
     int running = 1;
     struct XWindow win;
@@ -1180,10 +1175,10 @@ int main(void)
             ButtonPress | ButtonReleaseMask| ButtonMotionMask |
             Button1MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask|
             PointerMotionMask| StructureNotifyMask;
-        de_hight=DisplayHeight(win.dpy,DefaultScreen(win.dpy));
-        de_width=DisplayWidth(win.dpy,DefaultScreen(win.dpy));
+        desktop_hight=DisplayHeight(win.dpy,DefaultScreen(win.dpy));
+        desktop_width=DisplayWidth(win.dpy,DefaultScreen(win.dpy));
         win.win = XCreateWindow(win.dpy, RootWindow(win.dpy, win.vis->screen), 0, 0,
-                                de_width, de_hight, 0, win.vis->depth, InputOutput,
+                                desktop_width, desktop_hight, 0, win.vis->depth, InputOutput,
                                 win.vis->visual, CWBorderPixel|CWColormap|CWEventMask, &win.swa);
         if(!win.win) die("%s","[X11]: Failed to create window\n");
         XFree(win.vis);
@@ -1287,8 +1282,8 @@ int main(void)
     st.ac=1;
     st.st=NAME;
     qsort_r(files, fnum, sizeof(struct fileinfo *),&st,pstrcmp);
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-    bgimage=load_image_open_resize(BGIMAGE, de_width,de_hight);
+    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.94f, bg.a = 1.0f;
+    bgimage=load_image_open_resize(BGIMAGE, desktop_width,desktop_hight);
     struct menupos menupos;
     menupos.isactive=false;
     while(running)
@@ -1306,16 +1301,16 @@ int main(void)
         ctx->style.window.padding = nk_vec2(0,0);
         ctx->style.window.spacing = nk_vec2(0,0);
         ctx->style.window.scrollbar_size = nk_vec2(0,0);
-        if(nk_begin(ctx, "desk", nk_rect(0, 0, de_width, de_hight),0))
+        if(nk_begin(ctx, "desk", nk_rect(0, 0, desktop_width, desktop_hight),0))
         {
             files= updatefiles(desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
             struct nk_window * win;
             win = ctx->current;
-            nk_draw_image(&win->buffer,nk_rect(0,0,de_width,de_hight),&bgimage,nk_rgb(255,255,255));
+            nk_draw_image(&win->buffer,nk_rect(0,0,desktop_width,desktop_hight),&bgimage,nk_rgb(255,255,255));
             int row=0;
             unsigned int col=0;
-            unsigned int maximum_cols=(de_width-(MINLFPAD+MINRIPAD))/(ICON_W+ICONHPAD);
-            float calpad = (float)((de_width-(MINLFPAD+MINRIPAD)) %(ICON_W+ICONHPAD)) /2;
+            unsigned int maximum_cols=(desktop_width-(MINLFPAD+MINRIPAD))/(ICON_W+ICONHPAD);
+            float calpad = (float)((desktop_width-(MINLFPAD+MINRIPAD)) %(ICON_W+ICONHPAD)) /2;
             nk_layout_space_begin(ctx, NK_STATIC, 70,maximum_cols);
             while(row<(fnum/maximum_cols)+1)
             {
@@ -1393,7 +1388,7 @@ int main(void)
                     nk_layout_row_dynamic(ctx,30,1);
                     nk_button_label(ctx,"open with");
                     nk_layout_row_dynamic(ctx,30,1);
-                    nk_button_label(ctx,"propertys");
+                    nk_button_label(ctx,"details");
                     nk_end(ctx);
                 }
             }
@@ -1405,7 +1400,6 @@ int main(void)
         XGetWindowAttributes(win.dpy, win.win, &win.attr);
         glViewport(0, 0, win.width, win.height);
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(bg.r, bg.g, bg.b, bg.a);
         nk_x11_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
         glXSwapBuffers(win.dpy, win.win);
     }
