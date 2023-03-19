@@ -4,18 +4,25 @@ and written in C
 
 # So....
 I was tired with the state of the bloated toolkits and desktop environments based on them .
-so i decided to start writing my own in my free time .
+So i decided to start writing my own in my free time .
 
 The goal of this project is to make a DE witch is fast, modular and minimal (like really minimal) with modern looks and bells and whistles. 
-I planned this DE to be BSD specific and I have no intention or motive to port it to Linux .
+I've intended to write this DE to be a BSD specific DE and I have no intention or motive to port it to Linux .
 
 ## Things done:
-+ The desktop is 70% done. and is in a near usable state
-+ The Nuksu program is done but is not really clean .
++ Have Wrote the Nukdesk a desktop program .
++ Have Wrote the Nuksu a pkexe like graphical program but simple .
++ The desktop is 50% done. And is in a near usable state .
++ The Nuksu program is done but the code is not really clean .
 ## TODOS:
-+ Comment this slab of code
-+ Write a nice Makefile
-+ Move the nuksu from xlib to opengl 
-+ Complete the desktop
-+ Move to ANSI C
++ Document the programs []
++ Comment this slab of code []
++ Write some nice Makefiles [X]
++ Move nuksu from Xlib to opengl [] 
++ Complete the desktop []
++ Move to ANSI C []
++ Test on (Open&Net)BSD []
++ Segment the functions in different files [@]
 + and a BIG MORE .....
+
+_[@] in the process , [X] done , [-] canceled_
