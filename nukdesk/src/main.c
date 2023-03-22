@@ -37,6 +37,7 @@
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
+#include "../../colibs/bool.h"
 #include "../../colibs/err.h"
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO

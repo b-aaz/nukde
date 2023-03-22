@@ -14,7 +14,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-typedef enum  {false, true} boolean;
 struct XWindow
 {
     Display * dpy;
@@ -35,7 +34,7 @@ struct magicline
 };
 struct thrd_icon_load_args
 {
-    boolean genid;
+    bool genid;
     thrd_t thrd;
     char * type;
     char * icon_path;
@@ -44,8 +43,8 @@ struct thrd_icon_load_args
 } ;
 struct fileinfo
 {
-    boolean deletded;
-    boolean isselected;
+    bool deletded;
+    bool isselected;
     struct kevent f_change;
     struct kevent f_event;
     int fd;
@@ -67,7 +66,7 @@ struct dsk_dir
 };
 struct menupos
 {
-    boolean isactive;
+    bool isactive;
     struct nk_vec2 pos;
 };
 enum acendeing
@@ -94,7 +93,7 @@ struct charnode
     char * name;
     struct charnode * next;
 };
-boolean input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,boolean * downup);
+bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup);
 int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r);
 char * line_parse(size_t * n,char * data,size_t * linelength);
 char * check_ops(char * bigpattern,char * data,char * type);

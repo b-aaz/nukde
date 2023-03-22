@@ -70,18 +70,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 #include "stb_image_resize.h"
 #define NK_PRIVET
-//  implementation 
 #include "../../../colibs/nuklear.h"
 #include "nuklear_xlib_gl3.h"
 #include "nusort.h"
 #include "ffload.h"
+#include "../../../colibs/bool.h" 
 
 #define ICON_W 150
 
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
-boolean input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,boolean * downup)
+bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
 {
     if(nk_input_is_mouse_click_in_rect(in,id,rect))
     {
@@ -578,7 +578,7 @@ void start_thrd_for_icon(struct fileinfo ** files,int fnum,int i)
     printf("the iterator %d name:%s type:%s:end\n",i,files[i]->name,files[i]->icon_load_args.type);
     if(strncmp(files[i]->icon_load_args.type,"img:",5)==0)
     {
-        boolean iconisuniqe = true;
+        bool iconisuniqe = true;
         //unsigned int l;
         //if (areyisnew){l=i;}else{l=fnum;}
         for(unsigned int i2 = 0; i2<fnum; i2++)
@@ -705,7 +705,7 @@ void delete_file(struct fileinfo ** files, int fnum, int i)
     }
     if(strcmp(files[i]->icon_load_args.type,"img:")==0)
     {
-        boolean iconisuniqe = true;
+        bool iconisuniqe = true;
         for(unsigned int i2 = 0; i2<fnum; i2++)
         {
             printf("%ud\n",i2);
@@ -746,7 +746,7 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
     t.tv_nsec = 0;
     t.tv_sec =0;
     int deledfiles=0;
-    boolean updir=false;
+    bool updir=false;
     struct kevent eventlist[1]= {0};
     /*struct kevent eventlist[*fnum+1];
     struct kevent changelist[*fnum+1];
@@ -851,7 +851,7 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
                 {
                     if(!(!strcmp(".",dir->d_name)||!strcmp("..",dir->d_name)))
                     {
-                        boolean isnew=true;
+                        bool isnew=true;
 
                         for(int i =0; i< (oldfnum-deledfiles); i++)
                         {
