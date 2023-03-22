@@ -11,9 +11,9 @@ COOBFILES=
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	cc $(OBFILES) $(COOBFILES)  $(CFLAGS) -o $@ -lX11 -lm -lcrypt 
-$(BINDIR)auth.o: $(LIBS)auth.c 
+$(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h 
 	cc -c   $(LIBS)auth.c $(LIBCFLAGS) $(CFLAGS) -o $@ 
 $(BINDIR)strrmadd.o: $(LIBS)strrmadd.c 
 	cc -c  $(LIBS)strrmadd.c $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h 
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h
 	cc -c $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@

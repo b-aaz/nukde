@@ -21,6 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <unistd.h>
 #define REDEFFUNCS
+#define NUERRREDEFFUNCS 
+#define NUERRSTDIO
+#define NUERRSTDLIB
+#define NUERRCOLORRE "\e[0m"
+#define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
 #include "../../../colibs/err.h"
 static char * findrootusersuserline(char * buffer)
 {
