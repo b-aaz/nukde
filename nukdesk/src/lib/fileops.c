@@ -75,7 +75,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "nusort.h"
 #include "ffload.h"
 #include "../../../colibs/bool.h" 
-
+#include "config-parser.h"
 #define ICON_W 150
 
 #define MAX_VERTEX_BUFFER 512 * 1024
@@ -102,136 +102,16 @@ int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
         return 0;
     }
 }
-char * line_parse(size_t * n,char * data,size_t * linelength)
-{
-    char * line=NULL;
-    if(data[*n]!='=')
-    {
-        die("Syntax error at %lu",*n);
-    }
-    ++*n;
-    while(data[*n+*linelength] != '\n')
-    {
-        ++*linelength;
-    }
-    if(0!=*linelength)
-    {
-        line=malloc(*linelength+1);
-        strncpy(line,data+*n,*linelength);
-        line[*linelength]='\0';
-    }
-    return line ;
-}
-
-char * check_ops(char * bigpattern,char * data,char * type)
-{
-    size_t pl=0, linelength=0;
-    char * pattern=NULL;
-    char * line=NULL;
-    size_t n=0;
-    int typel=4;
-    while(data[n]==',')
-    {
-        ++n;
-        linelength=0;
-        if(type!=NULL)
-        {
-            n+=typel;
-        }
-        while(data[n+pl]!='=')
-        {
-            ++pl;
-        }
-        if(NULL!=pattern)
-        {
-            free(pattern);
-        }
-        pattern = malloc(pl+1);
-        strncpy(pattern,data+n,pl);
-        pattern[pl]='\0';
-        n++;
-        n+=pl;
-        while(data[n+linelength] != '\n')
-        {
-            ++linelength;
-        }
-        if(strstr(bigpattern,pattern) != NULL)
-        {
-            line=malloc(linelength+1);
-            strncpy(line,data+n,linelength);
-            line[linelength]='\0';
-            if(type!=NULL)
-            {
-                strncpy(type,data+n-pl-typel-1,4);
-                type[4]='\0';
-            }
-            return line;
-            free(pattern);
-            pattern=NULL;
-        }
-        n+=linelength+1;
-    }
-    //	free(pattern);
-    return line;
-}
-
-
-char * line_wswpt(char * data, char * pattern,char * bigpattern,char * type)
-{
-    size_t n=0,pl=0, dl=0,linelength=0;
-    char * line=NULL;
-    char * lineops=NULL;
-    short unsigned int typel=0;
-    pl=strlen(pattern);
-    dl=strlen(data);
-    if(type!=NULL)
-    {
-        typel=4;
-    }
-    while(n<dl)
-    {
-        if(n==0||data[n-1]=='\n')
-        {
-            if(strncmp(data+n+typel,pattern,pl)==0)
-            {
-                n+=typel;
-                n+=pl;
-                line=line_parse(&n,data,&linelength);
-                if(bigpattern != NULL)
-                {
-                    //				n+=linelength+1;
-                    if(data[n+linelength+1]==',')
-                    {
-                        lineops= check_ops(bigpattern,data+n+linelength+1,type);
-                        if(lineops!=NULL)
-                        {
-                            return lineops;
-                        }
-                    }
-                }
-                if(type!=NULL)
-                {
-                    strncpy(type,data+n-typel-pl-1,4);
-                    type[4]='\0';
-                }
-                return line;
-            }
-        }
-        n++;
-    }
-    return NULL;
-}
-
 void lunch(char * openbuff,struct fileinfo f)
 {
     char * programname;
     char * lunchpath;
     printf("mime%s:end\n",f.magic.mime);
-    programname = line_wswpt(openbuff,f.magic.mime,f.magic.humanreadable,NULL);
+    programname = get_config(openbuff,f.magic.mime,f.magic.humanreadable,NULL);
     printf("name%s\n",programname);
     if(programname==NULL)
     {
-        programname = line_wswpt(openbuff,"default",NULL,NULL);
+        programname = get_config(openbuff,"default",NULL,NULL);
         if(programname==NULL)
         {
             die("%s\n","No programs found");
@@ -662,17 +542,17 @@ struct fileinfo * new_file(char * d_path,char * name, char * iconidx,magic_t mag
         {
             strcpy(file->icon_load_args.type,"img:");
             file->icon_load_args.type[4]='\0';
-            file->icon_load_args.icon_path=line_wswpt(shortcutfilebuffer,"#icon",NULL,NULL);
-            file->description=line_wswpt(shortcutfilebuffer,"#description",NULL,NULL);
+            file->icon_load_args.icon_path=get_config(shortcutfilebuffer,"#icon",NULL,NULL);
+            file->description=get_config(shortcutfilebuffer,"#description",NULL,NULL);
         }
     }
     if(file->icon_load_args.icon_path == NULL)
     {
-        file->icon_load_args.icon_path=line_wswpt(iconidx,file->magic.mime,file->magic.humanreadable,file->icon_load_args.type);
+        file->icon_load_args.icon_path=get_config(iconidx,file->magic.mime,file->magic.humanreadable,file->icon_load_args.type);
         if(file->icon_load_args.icon_path==NULL)
         {
             puts("failsafeL0");
-            file->icon_load_args.icon_path=line_wswpt(iconidx,file->magic.encode,NULL,file->icon_load_args.type);
+            file->icon_load_args.icon_path=get_config(iconidx,file->magic.encode,NULL,file->icon_load_args.type);
             if(file->icon_load_args.icon_path==NULL)
             {
                 puts("failsafeL1");

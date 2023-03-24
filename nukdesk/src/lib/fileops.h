@@ -95,9 +95,6 @@ struct charnode
 };
 bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup);
 int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r);
-char * line_parse(size_t * n,char * data,size_t * linelength);
-char * check_ops(char * bigpattern,char * data,char * type);
-char * line_wswpt(char * data, char * pattern,char * bigpattern,char * type);
 void lunch(char * openbuff,struct fileinfo f);
 void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect);
 int intcmp(int ac,long long int a, long long int b);
