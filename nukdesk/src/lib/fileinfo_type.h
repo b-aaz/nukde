@@ -14,8 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#include "../../../colibs/bool.h"
 #include <sys/event.h>
+#include "../../../colibs/bool.h"
      #include <sys/stat.h>
 #include <threads.h>
 

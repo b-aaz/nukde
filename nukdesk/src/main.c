@@ -51,6 +51,8 @@
 #include <nuklear.h>
 #include "lib/nuklear_xlib_gl3.h"
 #include "lib/fileops.h"
+#include "lib/icon-loader.h"
+#include "lib/icon-widget.h"
 
 
 #define MAX_VERTEX_BUFFER 512 * 1024
