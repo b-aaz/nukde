@@ -13,7 +13,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+     #include <sys/stat.h>
+     #include <threads.h>
+#include "fileinfo_type.h"
 struct XWindow
 {
     Display * dpy;
@@ -26,37 +28,7 @@ struct XWindow
     Atom wm_delete_window;
     int width, height;
 };
-struct magicline
-{
-    char * humanreadable;
-    char * mime;
-    char * encode;
-};
-struct thrd_icon_load_args
-{
-    bool genid;
-    thrd_t thrd;
-    char * type;
-    char * icon_path;
-    long int icon_size;
-    unsigned char * return_data;
-} ;
-struct fileinfo
-{
-    bool deletded;
-    bool isselected;
-    struct kevent f_change;
-    struct kevent f_event;
-    int fd;
-    char * name;
-    char * description;
-    char * path;
-    struct nk_image * return_image;
-    long long unsigned int f_size;
-    struct stat f_stat;
-    struct thrd_icon_load_args icon_load_args;
-    struct magicline magic;
-};
+;
 struct dsk_dir
 {
     DIR * d;

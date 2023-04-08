@@ -14,16 +14,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#define NK_XLIB_LOAD_OPENGL_EXTENSIONS
-#define NK_IMPLEMENTATION
+/*#define NK_IMPLEMENTATION*/
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <sys/event.h>
@@ -81,80 +72,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
-bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
-{
-    if(nk_input_is_mouse_click_in_rect(in,id,rect))
-    {
-        *downup=!*downup;
-    }
-    return *downup;
-}
 
 
-int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
-{
-    if(v.x>r.x&&v.x<r.x+r.w && v.y>r.y&&v.y<r.y+r.h)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-void lunch(char * openbuff,struct fileinfo f)
-{
-    char * programname;
-    char * lunchpath;
-    printf("mime%s:end\n",f.magic.mime);
-    programname = get_config(openbuff,f.magic.mime,f.magic.humanreadable,NULL);
-    printf("name%s\n",programname);
-    if(programname==NULL)
-    {
-        programname = get_config(openbuff,"default",NULL,NULL);
-        if(programname==NULL)
-        {
-            die("%s\n","No programs found");
-        }
-    }
-    lunchpath = malloc(strlen(programname)+1+strlen(f.path)+2);
-    strcpy(lunchpath,programname);
-    strcat(lunchpath," ");
-    strcat(lunchpath,f.path);
-    puts(lunchpath);
-    if(fork()==0)
-    {
-        execl("/bin/sh","sh","-c",lunchpath,NULL);
-    }
-}
 
-void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
-{
-    struct nk_window * win;
-    struct nk_text text ;
-    struct nk_input *in;
-    win = ctx->current;
-    in =  &ctx->input;
-    text.padding =nk_vec2(0,0);
-    text.background = nk_rgb(0,0,0);
-    text.text = nk_rgb(250,250,250);
-    if(nk_input_is_mouse_hovering_rect(in,icrect))
-    {
-        if(in->mouse.buttons[NK_BUTTON_LEFT].down)
-        {
-            nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,42));
-            if(in->mouse.buttons[NK_BUTTON_LEFT].clicked)
-            {
-                lunch(openbuff, *file);
-            }
-        }
-        //the shadow arond the icon when cursor is on it
-        nk_stroke_rect(&win->buffer,icrect,0,2,nk_rgba(250,250,250,32));
-        nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,32));
-    }
-    nk_widget_text(&win->buffer,icrect,name,nk_strlen(name),&text,NK_TEXT_ALIGN_CENTERED|NK_TEXT_ALIGN_BOTTOM,ctx->style.font);
-    nk_draw_image(&win->buffer,nk_rect(icrect.x,icrect.y,icrect.w,icrect.w),file->return_image,nk_rgb(255,255,255));
-}
 
 int intcmp(int ac,long long int a, long long int b)
 {
@@ -233,19 +153,6 @@ unsigned char * read_buffer_resize_open(char * path,long int image_r_w,long int 
     free(image);
     return image_r;
 }
-/*unsigned char * buffer_resize(unsigned char * ffbuf,long int image_r_w,long int image_r_h)
-{
-	unsigned int image_w=0, image_h =0 ;
-	unsigned char * image;
-	unsigned char * image_r;
-	image = ffread_buf(ffbuf,&image_w,&image_h);
-	//image_r=(unsigned char *)malloc(image_w*image_h*4);
-	//stbir_resize_uint8(image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);
-	image_r=(unsigned char *)malloc(image_r_w*image_r_h*4);
-	stbir_resize_uint8(image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);
-	free(image);
-	return image_r;
-}*/
 unsigned char * read_buffer_resize(FILE * file,long int image_r_w,long int image_r_h)
 {
     unsigned int image_w=0, image_h =0 ;
