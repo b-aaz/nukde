@@ -13,6 +13,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef FILEINFO_TYPE
+	#define FILEINFO_TYPE
+
 
 #include <sys/event.h>
 #include "../../../colibs/bool.h"
@@ -51,3 +54,5 @@ struct fileinfo
     struct thrd_icon_load_args icon_load_args;
     struct magicline magic;
 };
+
+#endif 

@@ -13,6 +13,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef FFLOAD
+	#define FFLOAD
+
 
 unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h);
 unsigned char * ffread_open(const char * path,unsigned int * w,unsigned int * h);
+
+#endif 

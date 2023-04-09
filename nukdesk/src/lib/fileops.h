@@ -13,6 +13,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef FILEOPS
+	#define FILEOPS
+
 #include <dirent.h>                     /* for DIR*/
 #include <magic.h>                      /* for magic_t*/
 #include <sys/event.h>                  /* for kevent*/
@@ -84,3 +87,5 @@ int ifbuffisadhortcut(char * buff);
 struct fileinfo * new_file(char * d_path,char * name, char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
 void delete_file(struct fileinfo ** files, int fnum, int i);
 struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,int kqueue,struct fileinfo ** files,char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
+
+#endif 

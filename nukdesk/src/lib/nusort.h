@@ -13,5 +13,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef NUSORT
+	#define NUSORT
+
 
 int strnucmp(short int *ac,const char * str1,const char * str2);
+
+#endif 
