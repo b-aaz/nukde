@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INCLUDE_STYLE
 /*#define NK_INPUT_MAX 2 */
 #include "../../colibs/nuklear.h"
+#include "../../colibs/bool.h"
 #include "./lib/nuklear_xlib.h"
 #define DTIME          20
 #define CHAR_REPEAT_DELAY 100
@@ -58,7 +59,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef INCLUDE_STYLE
 #include "./style.c"
 #endif
-typedef enum  {	false, true} boolean;
 
 typedef struct XWindow XWindow;
 struct XWindow
@@ -171,7 +171,7 @@ void draw_lock(struct nk_command_buffer * b,struct nk_rect lockpos,int openperc,
 
 
 
-void input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,boolean * downup)
+void input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
 {
     if(nk_input_is_mouse_click_in_rect(in,id,rect))
     {
@@ -184,7 +184,7 @@ void input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_but
 
 
 
-void lock_icon(struct nk_context * ctx,struct nk_rect lockpos,short int speed,int * lockopeness,boolean * downup,struct lock_style lockstyle)
+void lock_icon(struct nk_context * ctx,struct nk_rect lockpos,short int speed,int * lockopeness,bool * downup,struct lock_style lockstyle)
 {
     struct nk_input * in;
     struct nk_command_buffer * b;
@@ -260,10 +260,10 @@ struct passwords_input_data
 {
 
 
-    boolean active ;
+    bool active ;
     size_t cursor_pos;
     size_t shift;
-    boolean showpass ;
+    bool showpass ;
     long lastt;
     int lockopeness;
 };
@@ -551,8 +551,8 @@ int main(int argc,char * argv[])
     long dt;
     long started;
     struct nk_context * ctx;
-    boolean running = 1;
-    boolean warn=0;
+    bool running = 1;
+    bool warn=0;
     time_t utime=0;
     short int tries=0;
     XWindow xw;

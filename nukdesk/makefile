@@ -6,15 +6,23 @@ BIN=nukdesk
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
 CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
-OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o $(BINDIR)ffload.o
+OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o $(BINDIR)ffload.o $(BINDIR)fileops.o $(BINDIR)config-parser.o $(BINDIR)icon-widget.o $(BINDIR)icon-loader.o 
 COOBFILES=
+
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	cc  $(OBFILES) $(COOBFILES) $(CFLAGS) -o $@ -lstdthreads -lX11 -lm -lGL -lGLU -lmagic 
-$(BINDIR)nusort.o: $(LIBS)nusort.c 
+$(BINDIR)nusort.o: $(LIBS)nusort.c $(LIBS)nusort.h 
 	cc -c   $(LIBS)nusort.c $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h 
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(LIBS)icon-widget.h  $(LIBS)icon-loader.h $(LIBS)fileops.h
 	cc -c  $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)ffload.o:$(LIBS)ffload.c $(COLIBS)err.h 
+$(BINDIR)ffload.o:$(LIBS)ffload.c $(LIBS)ffload.h $(COLIBS)err.h 
 		cc -c  $(LIBS)ffload.c  $(LIBCFLAGS) $(CFLAGS) -o $@
-
+$(BINDIR)config-parser.o:$(LIBS)config-parser.c $(LIBS)config-parser.h $(COLIBS)err.h 
+		cc -c  $(LIBS)config-parser.c  $(LIBCFLAGS) $(CFLAGS) -o $@
+$(BINDIR)fileops.o:$(LIBS)fileops.c $(LIBS)fileops.h $(COLIBS)err.h $(COLIBS)bool.h $(LIBS)nusort.h $(LIBS)ffload.h $(LIBS)config-parser.h
+		cc -c  $(LIBS)fileops.c  $(LIBCFLAGS) $(CFLAGS) -o $@
+$(BINDIR)icon-widget.o:$(LIBS)icon-widget.c $(LIBS)icon-widget.h $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)nuklear.h
+		cc -c  $(LIBS)icon-widget.c  $(LIBCFLAGS) $(CFLAGS) -o $@
+$(BINDIR)icon-loader.o:$(LIBS)icon-loader.c $(LIBS)icon-loader.h $(COLIBS)err.h $(COLIBS)nuklear.h $(LIBS)stb_image_resize.h $(LIBS)ffload.h $(LIBS)fileinfo_type.h 
+		cc -c  $(LIBS)icon-loader.c  $(LIBCFLAGS) $(CFLAGS) -o $@
