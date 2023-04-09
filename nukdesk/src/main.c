@@ -1,26 +1,12 @@
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <GL/glext.h>
-#include <X11/Xlib.h>
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-#include <time.h>
-#include <limits.h>
-
-#include <dirent.h>
-#include <magic.h>
-#include <sys/stat.h>
-#include <sys/event.h>
-#include <threads.h>
-#include <fcntl.h>
+#include <assert.h>			// for assert	
+#include <dirent.h>                     // for readdir, opendir, rewinddir
+#include <fcntl.h>                      // for open, O_RDONLY
+#include <magic.h>                      // for magic_error, magic_load, magi...
+#include <stdio.h>                      // for fprintf, printf, NULL, puts
+#include <stdlib.h>                     // for getenv, qsort_r, malloc
+#include <string.h>                     // for strcmp, strlen, memset, strcat
+#include <sys/dirent.h>                 // for dirent
+#include <sys/event.h>                  // for kqueue, EVFILT_VNODE, EV_ADD
 
 #define FAILSAFEICON "../examples/pics/err.ff"
 #define BGIMAGE "../examples/pics/bg.ff"
@@ -37,8 +23,6 @@
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../colibs/bool.h"
-#include "../../colibs/err.h"
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -46,13 +30,22 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
+#include "../../colibs/err.h"           // for die
+#include "../../../colibs/bool.h"     // for false, true
+#include "../../../colibs/nuklear.h"  // for nk_vec2, nk_button_label, nk_...
+#include "GL/gl.h"                      // for GLint, glClear, glViewport
+#include "GL/glx.h"                     // for GLXFBConfig, glXGetFBConfigAt...
+#include "X11/X.h"                      // for None, AllocNone, Button1Motio...
+#include "X11/Xlib.h"                   // for XFree, XSetErrorHandler, XSync
+#include "X11/Xutil.h"                  // for XVisualInfo
+
 #define NK_XLIB_GL3_IMPLEMENTATION
 #define NK_XLIB_LOAD_OPENGL_EXTENSIONS
-#include <nuklear.h>
-#include "lib/nuklear_xlib_gl3.h"
-#include "lib/fileops.h"
-#include "lib/icon-loader.h"
-#include "lib/icon-widget.h"
+#include "lib/fileinfo_type.h"          // for fileinfo, thrd_icon_load_args
+#include "lib/fileops.h"                // for XWindow, dsk_dir, menupos
+#include "lib/icon-loader.h"            // for load_image_open_resize, loadicon
+#include "lib/icon-widget.h"            // for draw_icon
+#include "lib/nuklear_xlib_gl3.h"       // for nk_x11_font_stash_begin, nk_x...
 
 
 #define MAX_VERTEX_BUFFER 512 * 1024

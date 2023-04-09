@@ -13,17 +13,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sys/endian.h>
-#include <arpa/inet.h>
-#include <sys/endian.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <arpa/inet.h>            // for ntohl, ntohs
+#include <stdio.h>                // for fread, fclose, FILE, size_t
+#include <stdlib.h>               // for malloc
+#include <string.h>               // for memcmp
+
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO 
 #define NUERRSTDLIB 
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"
+#include "../../../colibs/err.h"  // for die, fopen
 
 
 /*the header structure for reading the farbfeld format read farbfeld(5) */

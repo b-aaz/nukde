@@ -13,24 +13,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glext.h>
-#include <GL/glxext.h>
-#include <GLES3/gl3.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <GLES3/gl3.h>                // for glTexParameterf, GL_TEXTURE_2D
+#include <stdio.h>                    // for printf, puts, FILE, pclose, popen
+#include <stdlib.h>                   // for free, malloc, NULL
+#include <string.h>                   // for strcat, strlen, strncmp, strcmp
+#include <threads.h>                  // for thrd_create, thrd_error, thrd_s...
+
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"
-#include "stb_image_resize.h"
-#include "../../../colibs/nuklear.h"
-#include "ffload.h" 
-#include "fileinfo_type.h" 
+#include "../../../colibs/err.h"      // for die
+#include "../../../colibs/nuklear.h"  // for nk_image, nk_image_id
+#include "../../../colibs/bool.h"   // for true, false, bool
+#include "ffload.h"                   // for ffread, ffread_open
+#include "fileinfo_type.h"            // for fileinfo, thrd_icon_load_args
+#include "stb_image_resize.h"         // for stbir_resize_uint8
+
 #define ICON_W 150
 unsigned char * read_buffer_resize_open(char * path,long int image_r_w,long int image_r_h)
 {

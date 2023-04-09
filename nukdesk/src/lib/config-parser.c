@@ -1,13 +1,15 @@
-#include <stdlib.h> 
-#include <stdio.h> 
+#include <stdio.h>                // for NULL, size_t
+#include <stdlib.h>               // for free, malloc
+
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"
-#include <unistd.h>
-#include <string.h>
+#include <string.h>               // for strncpy, strlen, strncmp, strstr
+
+#include "../../../colibs/err.h"  // for die
+
 /*
  *The configuration lines of the "config" files have a syntax link this:
  *

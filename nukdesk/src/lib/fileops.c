@@ -17,56 +17,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define NK_IMPLEMENTATION*/
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include <sys/event.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <time.h>
-#include <limits.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <magic.h>
-#include <threads.h>
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glext.h>
-#include <string.h>
-#include <GL/glxext.h>
-#include <GLES3/gl3.h>
-
-#include <sys/time.h>
-#include <unistd.h>
-#include <time.h>
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xresource.h>
-#include <X11/Xlocale.h>
+#include <dirent.h>               // for readdir, rewinddir, closedir, opendir
+#include <fcntl.h>                // for open, O_RDONLY
+#include <magic.h>                // for magic_file, magic_set, magic_t
+#include <stdio.h>                // for printf, puts, NULL, fseek, fclose
+#include <stdlib.h>               // for free, malloc, realloc
+#include <string.h>               // for strcmp, strlen, strcpy, strcat, memcpy
+#include <sys/dirent.h>           // for dirent
+#include <sys/event.h>            // for kevent, NOTE_ATTRIB, NOTE_CLOSE
+#include <sys/stat.h>             // for stat, timespec, st_atime, st_ctime
+#include <threads.h>              // for thrd_join
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"
+#include "../../../colibs/err.h"  // for die, fopen
+#include "GL/gl.h"                // for glDeleteTextures
+#include "fileinfo_type.h"        // for fileinfo, thrd_icon_load_args, magi...
+
 #define FAILSAFEICON "../examples/pics/err.ff"
 #define BGIMAGE "../examples/pics/bg.ff"
 #define FAILSAFEICONIDX "../examples/icon.nucfg"
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 #include "stb_image_resize.h"
+
 #define NK_PRIVET
-#include "../../../colibs/nuklear.h"
-#include "nuklear_xlib_gl3.h"
-#include "nusort.h"
-#include "ffload.h"
-#include "../../../colibs/bool.h" 
-#include "config-parser.h"
+#include "config-parser.h"        // for get_config
+#include "nusort.h"               // for strnucmp
+
 #define ICON_W 150
 
 #define MAX_VERTEX_BUFFER 512 * 1024
