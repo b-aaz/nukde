@@ -1,14 +1,14 @@
-#include <stdio.h>                // for NULL, size_t
-#include <stdlib.h>               // for free, malloc
+#include <stdio.h>                /* for NULL, size_t*/
+#include <stdlib.h>               /* for free, malloc*/
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include <string.h>               // for strncpy, strlen, strncmp, strstr
+#include <string.h>               /* for strncpy, strlen, strncmp, strstr*/
 
-#include "../../../colibs/err.h"  // for die
+#include "../../../colibs/err.h"  /* for die*/
 
 /*
  *The configuration lines of the "config" files have a syntax link this:
@@ -114,7 +114,7 @@ char * get_config(char * data, char * pattern,char * bigpattern,char * type)
                 line=line_parse(&n,data,&linelength);
                 if(bigpattern != NULL)
                 {
-                    //				n+=linelength+1;
+                    /*				n+=linelength+1;*/
                     if(data[n+linelength+1]==',')
                     {
                         lineops= check_subops(bigpattern,data+n+linelength+1,type);

@@ -17,25 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define NK_IMPLEMENTATION*/
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include <dirent.h>               // for readdir, rewinddir, closedir, opendir
-#include <fcntl.h>                // for open, O_RDONLY
-#include <magic.h>                // for magic_file, magic_set, magic_t
-#include <stdio.h>                // for printf, puts, NULL, fseek, fclose
-#include <stdlib.h>               // for free, malloc, realloc
-#include <string.h>               // for strcmp, strlen, strcpy, strcat, memcpy
-#include <sys/dirent.h>           // for dirent
-#include <sys/event.h>            // for kevent, NOTE_ATTRIB, NOTE_CLOSE
-#include <sys/stat.h>             // for stat, timespec, st_atime, st_ctime
-#include <threads.h>              // for thrd_join
+#include <dirent.h>               /* for readdir, rewinddir, closedir, opendir*/
+#include <fcntl.h>                /* for open, O_RDONLY*/
+#include <magic.h>                /* for magic_file, magic_set, magic_t*/
+#include <stdio.h>                /* for printf, puts, NULL, fseek, fclose*/
+#include <stdlib.h>               /* for free, malloc, realloc*/
+#include <string.h>               /* for strcmp, strlen, strcpy, strcat, memcpy*/
+#include <sys/dirent.h>           /* for dirent*/
+#include <sys/event.h>            /* for kevent, NOTE_ATTRIB, NOTE_CLOSE*/
+#include <sys/stat.h>             /* for stat, timespec, st_atime, st_ctime*/
+#include <threads.h>              /* for thrd_join*/
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"  // for die, fopen
-#include "GL/gl.h"                // for glDeleteTextures
-#include "fileinfo_type.h"        // for fileinfo, thrd_icon_load_args, magi...
+#include "../../../colibs/err.h"  /* for die, fopen*/
+#include "GL/gl.h"                /* for glDeleteTextures*/
+#include "fileinfo_type.h"        /* for fileinfo, thrd_icon_load_args, magi...*/
 
 #define FAILSAFEICON "../examples/pics/err.ff"
 #define BGIMAGE "../examples/pics/bg.ff"
@@ -44,8 +44,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "stb_image_resize.h"
 
 #define NK_PRIVET
-#include "config-parser.h"        // for get_config
-#include "nusort.h"               // for strnucmp
+#include "config-parser.h"        /* for get_config*/
+#include "nusort.h"               /* for strnucmp*/
 
 #define ICON_W 150
 
@@ -373,13 +373,13 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
     }
     changelist[*fnum]=desktop_dir.d_change;*/
     int nev;
-    //struct kevent eventd;
+    /*struct kevent eventd;*/
     nev = kevent(kqueue, &desktop_dir.d_change, 1,eventlist, 1, &t);
-    //evevent iterator
+    /*evevent iterator*/
     for(int ei=0; ei<nev; ei++)
     {
         printf("ei %d\n",ei);
-        //event file iterator
+        /*event file iterator*/
         int efi=0;
         for(; efi< (*fnum); efi++)
         {
@@ -435,13 +435,13 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
         struct sortby st;
         st.ac=1;
         st.st=NAME;
-        //	qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);
+        /*	qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
         deledfiles=0;
         struct dirent * dir;
-        //int newfilenum=0;
+        /*int newfilenum=0;*/
         if(updir)
         {
-            //	sleep(1);
+            /*	sleep(1);*/
             int oldfnum= *fnum;
             *fnum = 0;
             puts("dir writento\n");
@@ -508,7 +508,7 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
                                 strcpy(current->next->name,dir->d_name);
                                 current->next->name[strlen(dir->d_name)]='\0';
                             }
-                            //					newfilenum++;
+                            /*					newfilenum++;*/
                         }
                     }
                 }
@@ -532,7 +532,7 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
                         }
                     }
                 }
-                //qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);
+                /*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
                 if(*fnum!=oldfnum)
                 {
                     printf("realloced from %d to %d\n", oldfnum,*fnum);
@@ -560,7 +560,7 @@ struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,in
             printf("fnum: %d\n",*fnum);
             rewinddir(desktop_dir.d);
         }
-        //qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);
+        /*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
     }
     return files;
 }

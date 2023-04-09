@@ -12,14 +12,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdio.h>                    // for NULL, puts
-#include <stdlib.h>                   // for malloc
-#include <string.h>                   // for strcat, strlen, strcpy
-#include <unistd.h>                   // for execl, fork
+#include <stdio.h>                    /* for NULL, puts*/
+#include <stdlib.h>                   /* for malloc*/
+#include <string.h>                   /* for strcat, strlen, strcpy*/
+#include <unistd.h>                   /* for execl, fork*/
 
-#include "../../../colibs/bool.h"   // for bool
-#include "config-parser.h"            // for get_config
-#include "fileinfo_type.h"            // for fileinfo, magicline
+#include "../../../colibs/bool.h"   /* for bool*/
+#include "config-parser.h"            /* for get_config*/
+#include "fileinfo_type.h"            /* for fileinfo, magicline*/
 
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_FIXED_TYPES
@@ -31,14 +31,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_XLIB_LOAD_OPENGL_EXTENSIONS
 #define NK_IMPLEMENTATION
-#include "../../../colibs/nuklear.h"  // for nk_rect, nk_rgb, nk_rgba, nk_vec2
+#include "../../../colibs/nuklear.h"  /* for nk_rect, nk_rgb, nk_rgba, nk_vec2*/
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLOR ""
 #define NUERRCOLORRE ""
-#include "../../../colibs/err.h"      // for die
+#include "../../../colibs/err.h"      /* for die*/
 
 bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
 {

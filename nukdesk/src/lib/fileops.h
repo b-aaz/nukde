@@ -13,16 +13,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <dirent.h>                     // for DIR
-#include <magic.h>                      // for magic_t
-#include <sys/event.h>                  // for kevent
+#include <dirent.h>                     /* for DIR*/
+#include <magic.h>                      /* for magic_t*/
+#include <sys/event.h>                  /* for kevent*/
 
-#include "../../../colibs/bool.h"     // for bool
-#include "../../../colibs/nuklear.h"  // for nk_vec2
-#include "GL/glx.h"                     // for GLXFBConfig, __GLXFBConfigRec
-#include "X11/X.h"                      // for Atom, Colormap, Window
-#include "X11/Xlib.h"                   // for Display, XSetWindowAttributes
-#include "X11/Xutil.h"                  // for XVisualInfo
+#include "../../../colibs/bool.h"     /* for bool*/
+#include "../../../colibs/nuklear.h"  /* for nk_vec2*/
+#include "GL/glx.h"                     /* for GLXFBConfig, __GLXFBConfigRec*/
+#include "X11/X.h"                      /* for Atom, Colormap, Window*/
+#include "X11/Xlib.h"                   /* for Display, XSetWindowAttributes*/
+#include "X11/Xutil.h"                  /* for XVisualInfo*/
 
 struct fileinfo;
 
