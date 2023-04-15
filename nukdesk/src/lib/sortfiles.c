@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
-#define NUERRCOLOR ""
-#define NUERRCOLORRE ""
 #include "../../../colibs/err.h"  /* for die, fopen*/
 #include "nusort.h"               /* for strnucmp*/
 #include "sortfiles.h"               /* for strnucmp*/

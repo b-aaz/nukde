@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
-#define NUERRCOLOR ""
-#define NUERRCOLORRE ""
 #include "../../../colibs/err.h"      /* for die*/
 #include "../../../colibs/nuklear.h"  /* for nk_image, nk_image_id*/
 #include "../../../colibs/bool.h"   /* for true, false, bool*/

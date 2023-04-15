@@ -8,6 +8,12 @@
 #define NIFY(x) x
 #define TOSTRIFY(x) STRIFY(x)
 
+#ifndef NUERRCOLOR 
+#define NUERRCOLOR ""
+#endif
+#ifndef NUERRCOLORRE
+#define NUERRCOLORRE ""
+#endif
 static void die_ve(const char * line,const char * pfunc,const char * file,const char * fmt,va_list lastwords)
 {
 	fprintf(stderr,NUERRCOLOR"%s:%s:%s:%s:%s ",file,__DATE__,__TIME__,line,pfunc);

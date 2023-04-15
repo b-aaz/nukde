@@ -4,8 +4,6 @@
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
-#define NUERRCOLOR ""
-#define NUERRCOLORRE ""
 #include <string.h>               /* for strncpy, strlen, strncmp, strstr*/
 
 #include "../../../colibs/err.h"  /* for die*/
