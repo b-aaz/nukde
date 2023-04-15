@@ -68,7 +68,7 @@ static char * check_subops(char * bigpattern,char * data,char * type)
     return line;
 }
 
-char * line_parse(size_t * n,char * data,size_t * linelength)
+static char * line_parse(size_t * n,char * data,size_t * linelength)
 {
     char * line=NULL;
     if(data[*n]!='=')

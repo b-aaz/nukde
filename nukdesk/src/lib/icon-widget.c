@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NUERRSTDLIB
 #include "../../../colibs/err.h"      /* for die*/
 
-bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
+static bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
 {
     if(nk_input_is_mouse_click_in_rect(in,id,rect))
     {
@@ -46,7 +46,7 @@ bool input_mouse_has_clicked_even_times_in_rect(struct nk_input * in,enum nk_but
     }
     return *downup;
 }
-int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
+static int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
 {
     if(v.x>r.x&&v.x<r.x+r.w && v.y>r.y&&v.y<r.y+r.h)
     {
@@ -57,7 +57,7 @@ int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
         return 0;
     }
 }
-void lunch(char * openbuff,struct fileinfo file)
+static void lunch(char * openbuff,struct fileinfo file)
 {
     char * programname;
     char * lunchpath;

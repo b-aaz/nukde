@@ -41,12 +41,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define NK_PRIVET
 #include "config-parser.h"        /* for get_config*/
+#include "icon-loader.h"        /* for start_thrd_for_icon*/
 
 #define ICON_W 150
 
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
+static struct charnode
+{
+    char * name;
+    struct charnode * next;
+};
 char * fileopentobuff (const char * path)
 {
 	FILE * fp;
@@ -63,7 +69,7 @@ char * fileopentobuff (const char * path)
 	return buff;
 }
 
-void magic_line_split (const	char * data, char * lines[])
+static void magic_line_split (const	char * data, char * lines[])
 {
 	size_t n=0;
 	size_t linelength=0;
@@ -103,7 +109,7 @@ void magic_line_split (const	char * data, char * lines[])
 }
 
 /*Gets the size of a directory with stat() and recursion*/
-unsigned long long int dirsize (char * dirpath)
+static unsigned long long int dirsize (char * dirpath)
 {
 	unsigned long long int size=0;
 	DIR * dir;

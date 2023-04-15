@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fileinfo_type.h"
 
-int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r);
-void lunch(char * openbuff,struct fileinfo file);
 void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect);
 
 #endif 

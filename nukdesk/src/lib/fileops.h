@@ -26,9 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "X11/X.h"                      /* for Atom, Colormap, Window*/
 #include "X11/Xlib.h"                   /* for Display, XSetWindowAttributes*/
 #include "X11/Xutil.h"                  /* for XVisualInfo*/
-
-struct fileinfo;
-
 struct XWindow
 {
     Display * dpy;
@@ -41,7 +38,6 @@ struct XWindow
     Atom wm_delete_window;
     int width, height;
 };
-;
 struct dsk_dir
 {
     DIR * d;
@@ -54,19 +50,7 @@ struct menupos
     bool isactive;
     struct nk_vec2 pos;
 };
-enum acendeing
-{
-    AC=1,
-    DC=-1
-};
-struct charnode
-{
-    char * name;
-    struct charnode * next;
-};
-char * fileopentobuff(const char * path);
-void magic_line_split(const	char * data, char * lines[]);
-unsigned long long int dirsize(char * dirpath);
+char * fileopentobuff (const char * path);
 struct fileinfo * new_file(char * d_path,char * name, char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
 void delete_file(struct fileinfo ** files, int fnum, int i);
 struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,int kqueue,struct fileinfo ** files,char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
