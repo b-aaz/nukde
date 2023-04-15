@@ -46,6 +46,7 @@
 #include "lib/icon-loader.h"            /* for load_image_open_resize, loadicon*/
 #include "lib/icon-widget.h"            /* for draw_icon*/
 #include "lib/nuklear_xlib_gl3.h"       /* for nk_x11_font_stash_begin, nk_x...*/
+#include "lib/sortfiles.h"               /* for sortfiles*/
 
 
 #define MAX_VERTEX_BUFFER 512 * 1024
@@ -285,7 +286,7 @@ int main(void)
     struct sortby st;
     st.ac=1;
     st.st=NAME;
-    qsort_r(files, fnum, sizeof(struct fileinfo *),&st,pstrcmp);
+    sortfiles(files,fnum,st);
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.94f, bg.a = 1.0f;
     bgimage=load_image_open_resize(BGIMAGE, desktop_width,desktop_hight);
     struct menupos menupos;

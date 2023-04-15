@@ -43,84 +43,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define NK_PRIVET
 #include "config-parser.h"        /* for get_config*/
-#include "nusort.h"               /* for strnucmp*/
 
 #define ICON_W 150
 
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
-int intcmp (int ac,long long int a, long long int b)
-{
-	if (a>b)
-	{
-		return ac;
-	}
-	else if (a<b)
-	{
-		return -ac;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-int pstrcmp (void * sort,const void * a, const void * b)
-{
-	struct fileinfo * file1;
-	struct fileinfo * file2;
-	struct sortby sb;
-	sb = * (struct sortby *) sort ;
-	file1=* (struct fileinfo **) a;
-	file2= * (struct fileinfo **) b;
-
-	if (file1!=NULL && file2==NULL)
-	{
-		return -1;
-	}
-
-	if (file1==NULL && file2!=NULL)
-	{
-		return 1;
-	}
-
-	if (file1==NULL && file2==NULL)
-	{
-		return 0;
-	}
-
-	switch (sb.st)
-	{
-		case NAME:
-			return strnucmp (&sb.ac, file1->name, file2->name);
-			break;
-
-		case TYPE:
-			return strnucmp (&sb.ac, file1->magic.humanreadable, file2->magic.humanreadable);
-			break;
-
-		case SIZE:
-			return intcmp (sb.ac, file1->f_size, file2->f_size);
-			break;
-
-		case MTIME:
-			return intcmp (sb.ac, file1->f_stat.st_mtime, file2->f_stat.st_mtime);
-			break;
-
-		case CTIME:
-			return intcmp (sb.ac, file1->f_stat.st_ctime, file2->f_stat.st_ctime);
-			break;
-
-		case ATIME:
-			return intcmp (sb.ac, file1->f_stat.st_atime, file2->f_stat.st_atime);
-			break;
-
-		default:
-			break;
-	}
-}
-
 char * fileopentobuff (const char * path)
 {
 	FILE * fp;
@@ -141,12 +69,12 @@ void magic_line_split (const	char * data, char * lines[])
 {
 	size_t n=0;
 	size_t linelength=0;
-
+	puts(data);
 	while (data[linelength] != ';')
 	{
 		if (data[linelength]=='\0')
 		{
-			puts ("lolo");
+			die("%s\n","Error splitting the magic line finding ';'");
 		}
 
 		linelength++;
@@ -161,7 +89,7 @@ void magic_line_split (const	char * data, char * lines[])
 
 	if (data[n]!='=')
 	{
-		puts ("lolo1");
+			die("%s\n","Error splitting the magic line finding '='");
 	}
 
 	n++;
@@ -473,13 +401,6 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 			printf ("File attributes modified %s\n",files[efi]->name);
 		}
 
-		struct sortby st;
-
-		st.ac=1;
-
-		st.st=NAME;
-
-		/*	qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
 		deledfiles=0;
 
 		struct dirent * dir;
@@ -593,7 +514,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 					}
 				}
 
-				/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
+				/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,filecmp);*/
 				if (*fnum!=oldfnum)
 				{
 					printf ("realloced from %d to %d\n", oldfnum,*fnum);
@@ -624,7 +545,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 			rewinddir (desktop_dir.d);
 		}
 
-		/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,pstrcmp);*/
+		/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,filecmp);*/
 	}
 
 	return files;

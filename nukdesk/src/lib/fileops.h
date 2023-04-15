@@ -59,31 +59,14 @@ enum acendeing
     AC=1,
     DC=-1
 };
-enum sorttype
-{
-    NAME=1,
-    SIZE=2,
-    TYPE=3,
-    MTIME=4,
-    CTIME=5,
-    ATIME=6
-};
-struct sortby
-{
-    short int ac;
-    enum sorttype st;
-};
 struct charnode
 {
     char * name;
     struct charnode * next;
 };
-int intcmp(int ac,long long int a, long long int b);
-int pstrcmp(void * sort,const void * a, const void * b);
 char * fileopentobuff(const char * path);
 void magic_line_split(const	char * data, char * lines[]);
 unsigned long long int dirsize(char * dirpath);
-int ifbuffisadhortcut(char * buff);
 struct fileinfo * new_file(char * d_path,char * name, char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
 void delete_file(struct fileinfo ** files, int fnum, int i);
 struct fileinfo ** updatefiles(struct dsk_dir desktop_dir,unsigned int * fnum,int kqueue,struct fileinfo ** files,char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
