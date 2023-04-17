@@ -53,6 +53,7 @@ static struct charnode
     char * name;
     struct charnode * next;
 };
+/*Reads path file into a char array */
 char * fileopentobuff (const char * path)
 {
 	FILE * fp;
@@ -68,7 +69,7 @@ char * fileopentobuff (const char * path)
 	buff[fl]='\0';
 	return buff;
 }
-
+/*Splits a mime identifier returned from libmagic into a encoding and mime strings*/
 static void magic_line_split (const	char * data, char * lines[])
 {
 	size_t n=0;
@@ -108,7 +109,7 @@ static void magic_line_split (const	char * data, char * lines[])
 	lines[1][linelength]='\0';
 }
 
-/*Gets the size of a directory with stat() and recursion*/
+/*Gets the size of a directory with stat(2) and recursion*/
 static unsigned long long int dirsize (char * dirpath)
 {
 	unsigned long long int size=0;
@@ -158,6 +159,7 @@ static int lineadvance (FILE * fp)
 
 	return chr=='\n';
 }
+/*Checks if a file is a desktop shortcut.*/
 static int fileisashortcut (char * path)
 {
 	char secondline[10];
@@ -181,6 +183,7 @@ static int fileisashortcut (char * path)
 	fclose (filepointer);
 	return 0;
 }
+/*Adds a new file to a fileinfo * array*/
 struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr)
 {
 	struct fileinfo * file ;
@@ -258,6 +261,7 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 	printf ("icpath: %s , type: %s\n",file->icon_load_args.icon_path,file->icon_load_args.type);
 	return file;
 }
+/*Deletes a file from a fileinfo * array*/
 void delete_file (struct fileinfo ** files, int fnum, int i)
 {
 	if (strcmp (files[i]->icon_load_args.type,"eie:") ==0)
@@ -316,6 +320,8 @@ void delete_file (struct fileinfo ** files, int fnum, int i)
 	files[i]=NULL;
 	puts ("deled");
 }
+/*Updates a fileinfo * array 
+ *This function is getting real big....  */
 struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,int kqueue,struct fileinfo ** files,char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr)
 {
 	struct timespec t;

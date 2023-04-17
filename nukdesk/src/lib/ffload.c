@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../../colibs/err.h"  /* for die, fopen*/
 
 
-/*the header structure for reading the farbfeld format read farbfeld(5) */
+/* The header structure for reading the farbfeld format read farbfeld(5) */
 static struct farbfeld_header
 {
     char ma [7];
@@ -33,7 +33,7 @@ static struct farbfeld_header
 };
 /* Reads the farbfeld image data onto memory from a file descriptor 
  * byte by byte to a RGBA array of little endian 8-bit(a unsigned 
- * char) per channel pixels*/
+ * char) per channel pixels and sets the with and hight.*/
 unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h)
 {
     struct farbfeld_header hh= {0};
@@ -58,7 +58,7 @@ unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h)
     return buffer;
 }
 /* Opens the file in the path argument and reads the image data with the help of
- * the ffread function.*/
+ * the ffread function and sets the with and hight.*/
 unsigned char * ffread_open(const char * path,unsigned int * w,unsigned int * h)
 {
     unsigned char * buffer;
