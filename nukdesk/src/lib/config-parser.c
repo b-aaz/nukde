@@ -37,6 +37,7 @@
  * We then go in it's suboptions and for each suboption we store it and search the human readable identifier for any occurrence of it.
  * If there was a occurrence we return the suboptions value .
  * And if there was no occurrence in all suboptions the first found option(i.e the normal mime identifier  is returned.
+ */
 /*TODO:Use memmem instead of strstr*/
 /*TODO:Use an enum for the types*/
 static char * check_subops(char * bigpattern,char * data,char * type)
