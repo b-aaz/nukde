@@ -20,6 +20,8 @@
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO 
+#define NUERRLIBMAGIC
+#define NUERRSYSEVENT
 #define NUERRSTDLIB
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -103,21 +105,9 @@ int main(void)
     magic_t magic_cookie_mime=0;
     magic_t magic_cookie_hr=0;
     kqid=kqueue();
-    if(kqid == -1)
-    {
-        die ( "%s\n", "Kqueue");
-    }
     magic_cookie_mime = magic_open(MAGIC_MIME|MAGIC_PRESERVE_ATIME|MAGIC_SYMLINK|MAGIC_MIME_TYPE);
     magic_cookie_hr = magic_open(MAGIC_NONE);
-    if(magic_cookie_mime == NULL || magic_cookie_hr == NULL)
-    {
-        die("%s\n","Unable to initialize magic library");
-    }
     puts("Loading magic databases\n");
-    if(magic_load(magic_cookie_mime, NULL) != 0|| magic_load(magic_cookie_hr, NULL) != 0)
-    {
-        die("Cannot load ONE OR BOTH magic databases - %s %s\n", magic_error(magic_cookie_mime), magic_error(magic_cookie_hr));
-    }
     memset(&win, 0, sizeof(win));
     win.dpy = XOpenDisplay(NULL);
     if(!win.dpy) die("%s","Failed to open X display\n");
