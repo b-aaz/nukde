@@ -107,7 +107,10 @@ int main(void)
     kqid=kqueue();
     magic_cookie_mime = magic_open(MAGIC_MIME|MAGIC_PRESERVE_ATIME|MAGIC_SYMLINK|MAGIC_MIME_TYPE);
     magic_cookie_hr = magic_open(MAGIC_NONE);
+magic_load(magic_cookie_mime,NULL);
+magic_load(magic_cookie_hr,NULL);
     puts("Loading magic databases\n");
+
     memset(&win, 0, sizeof(win));
     win.dpy = XOpenDisplay(NULL);
     if(!win.dpy) die("%s","Failed to open X display\n");
