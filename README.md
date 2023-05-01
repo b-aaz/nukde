@@ -16,7 +16,7 @@ I've intended to write this DE to be a BSD specific DE and I have no intention o
 + The Nuksu program is done but the code is not really clean .
 ## TODOS:
 + Document the programs []
-+ Comment this slab of code []
++ Comment this slab of code [@]
 + Write some nice Makefiles [X]
 + Move nuksu from Xlib to opengl [] 
 + Complete the desktop []

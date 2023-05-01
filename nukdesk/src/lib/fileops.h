@@ -26,18 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "X11/X.h"                      /* for Atom, Colormap, Window*/
 #include "X11/Xlib.h"                   /* for Display, XSetWindowAttributes*/
 #include "X11/Xutil.h"                  /* for XVisualInfo*/
-struct XWindow
-{
-    Display * dpy;
-    Window win;
-    XVisualInfo * vis;
-    Colormap cmap;
-    XSetWindowAttributes swa;
-    XWindowAttributes attr;
-    GLXFBConfig fbc;
-    Atom wm_delete_window;
-    int width, height;
-};
 struct dsk_dir
 {
     DIR * d;
