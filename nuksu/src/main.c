@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define NK_INPUT_MAX 2 */
 #include "../../colibs/nuklear.h"
 #include "../../colibs/bool.h"
-#include "./lib/nuklear_xlib.h"
+#include "../../colibs/nuklear_xlib.h"
 #define DTIME          20
 #define CHAR_REPEAT_DELAY 100
 #define WINDOW_WIDTH    200
