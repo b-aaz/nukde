@@ -147,7 +147,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 	*item_count=0;
 
 	/*Going thru the buffer character by character*/
-	while (true)
+	while (buffer[i]!='\0')
 	{
 		if (buffer[i]=='='&&current->type==IMG)
 		{
@@ -177,15 +177,16 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 							current->namel= (buffer+i)-current->name-1;
 					}
 
+					/*	if (buffer[i]=='\n')
+						{
+						{
+							last_char_was_newline = false;
+							buffer[i]='\0';
+							i++;
+							continue;
+						}
+					*/
 					/*Checking if we reached the end of buffer*/
-					if (buffer[i]=='\0')
-					{
-						break;
-					}
-					if (buffer[i]=='\n')
-					{
-						goto skip;
-					}
 
 					/*If the current type is a label move it to the start of the list */
 					if (current->type==LBL)
@@ -199,6 +200,17 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 					current->next=malloc (sizeof (struct menu_item));
 					prev=current;
 					current=current->next;
+
+					if (buffer[i]=='\n')
+					{
+						while (buffer[i]=='\n')
+						{
+							i++;
+						}
+
+						if (buffer[i]=='\0')
+						{break;}
+					}
 				}
 
 				/*Checking if item has a type to detect*/
@@ -217,11 +229,10 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 			}
 			else
 			{
-
 				if (current->type!=MOR)
 				{
-				current->namel= (buffer+i)-current->name;
-					current->submenu_text=buffer+i;
+					current->namel= (buffer+i)-current->name-1;
+					current->submenu_text=buffer+i-1;
 				}
 
 				current->type=MOR;
@@ -237,7 +248,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 		{
 			last_char_was_newline=false;
 		}
-skip:
+
 		i++;
 	}
 
@@ -375,7 +386,7 @@ int main (void)
 
 			while (true)
 			{
-				if (nk_button_text (ctx,current->name,current->namel-1))
+				if (nk_button_text (ctx,current->name,current->namel))
 				{puts (current->name); exit (EXIT_SUCCESS);}
 
 				if (current->next!=NULL)
