@@ -131,7 +131,6 @@ char * getstdin()
 
 	buffer = realloc (buffer, buffersize+1);
 	buffer[buffersize] = '\0';
-	printf ("\n(:%s:)\n",buffer);
 	return buffer;
 }
 struct menu_item * parse_buffer (char * buffer,size_t * item_count)
@@ -149,14 +148,6 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 	/*Going thru the buffer character by character*/
 	while (buffer[i]!='\0')
 	{
-		if (buffer[i]=='='&&current->type==IMG)
-		{
-			current->namel= (buffer+i)-current->name-1;
-			buffer[i]='\0';
-			i++;
-			current->icpath=buffer+i;
-		}
-
 		if (last_char_was_newline)
 		{
 			if (buffer[i]!=',')
@@ -177,18 +168,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 							current->namel= (buffer+i)-current->name-1;
 					}
 
-					/*	if (buffer[i]=='\n')
-						{
-						{
-							last_char_was_newline = false;
-							buffer[i]='\0';
-							i++;
-							continue;
-						}
-					*/
-					/*Checking if we reached the end of buffer*/
-
-					/*If the current type is a label move it to the start of the list */
+					/*If the current type is a label move the item to the start of the list */
 					if (current->type==LBL)
 					{
 						current->next=head;
@@ -203,24 +183,27 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 
 					if (buffer[i]=='\n')
 					{
-						while (buffer[i]=='\n')
+						do
 						{
 							i++;
 						}
-
-						if (buffer[i]=='\0')
-						{break;}
+						while (buffer[i]=='\n');
+							if (buffer[i]=='\0')
+							{break;}
 					}
 				}
 
-				/*Checking if item has a type to detect*/
+				/*Checking if item has a type*/
 				if (buffer[i+3]==':')
 				{
+					/*Detecting the type */
 					current->type=detect_type (buffer+i);
+					/*Skipping 4 Characters to get to the start of the name*/
 					i+=4;
 				}
 				else
 				{
+					/*Setting type to normal*/
 					current->type=NRM;
 				}
 
@@ -236,6 +219,21 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 				}
 
 				current->type=MOR;
+				last_char_was_newline=false;
+				i++;
+				continue;
+			}
+		}
+		else
+		{
+			if (current->type==IMG&&buffer[i]=='=')
+			{
+				current->namel= (buffer+i)-current->name-1;
+				buffer[i]='\0';
+				i++;
+				current->icpath=buffer+i;
+				i++;
+				continue;
 			}
 		}
 
@@ -256,41 +254,19 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 	current->next=NULL;
 	return head;
 }
-
-int main (void)
+float find_max_text_width (struct menu_item * head, XFont * font)
 {
-	long dt;
-	long started;
-	int running = 1;
-	int i=0;
-	size_t num=8;
-	XWindow xw;
-	struct nk_context * ctx;
-	struct menu_item * current ;
-	struct menu_item * head;
-	float max_len=0;
-	float width;
-	float w,h;
-	current = parse_buffer (getstdin(), &num);
-	head=current;
-	/* X11 */
-	memset (&xw, 0, sizeof xw);
-	xw.dpy = XOpenDisplay (NULL);
-
-	if (!xw.dpy)
-	{
-		die ("Could not open a display; perhaps $DISPLAY is not set?");
-	}
-
-	xw.font = nk_xfont_create (xw.dpy, "fixed");
+	struct menu_item * current = head;
+	float max_text_width = 0 ;
+	float width= 0 ;
 
 	while (true)
 	{
-		width=  nk_xfont_get_text_width (nk_handle_ptr (xw.font), (float) xw.font->height,current->name,current->namel);
+		width=  nk_xfont_get_text_width (nk_handle_ptr (font), (float) font->height,current->name,current->namel);
 
-		if (width > max_len)
+		if (width > max_text_width)
 		{
-			max_len = width ;
+			max_text_width = width ;
 		}
 
 		if (current->next!=NULL)
@@ -304,8 +280,37 @@ int main (void)
 	}
 
 	current = head;
-	w=max_len;
-	h=num*10;
+	return max_text_width;
+}
+int main (void)
+{
+	long dt;
+	long started;
+	int running = 1;
+	size_t num=8;
+	XWindow xw;
+	struct nk_context * ctx;
+	struct menu_item * current ;
+	struct menu_item * head;
+	float max_text_width=0;
+	float width;
+	float w,h;
+	struct nk_color;
+	current = parse_buffer (getstdin(), &num);
+	head=current;
+	/* X11 */
+	memset (&xw, 0, sizeof xw);
+	xw.dpy = XOpenDisplay (NULL);
+
+	if (!xw.dpy)
+	{
+		die ("Could not open a display; perhaps $DISPLAY is not set?");
+	}
+
+	xw.font = nk_xfont_create (xw.dpy, "fixed");
+	max_text_width = find_max_text_width (head, xw.font);
+	w=max_text_width;
+	h=num*xw.font->height;
 	xw.root = DefaultRootWindow (xw.dpy);
 	xw.screen = XDefaultScreen (xw.dpy);
 	xw.vis = XDefaultVisual (xw.dpy, xw.screen);
@@ -340,12 +345,12 @@ int main (void)
 	set_style (ctx, THEME_DARK);
 #endif
 #endif
-	ctx->style.button.padding.x=0;
-	ctx->style.window.padding.x=0;
-	ctx->style.window.spacing.x=0;
 	ctx->style.window.spacing.y=0;
 	ctx->style.window.padding.y=0;
+	ctx->style.window.spacing.x=0;
+	ctx->style.window.padding.x=0;
 	ctx->style.button.padding.y=0;
+	ctx->style.button.padding.x=0;
 	ctx->style.button.rounding=0;
 	ctx->style.window.scrollbar_size.x=0;
 	ctx->style.window.scrollbar_size.y=0;
@@ -353,7 +358,6 @@ int main (void)
 
 	while (running)
 	{
-		i=0;
 		/* Input */
 		XEvent evt;
 		started = timestamp();
@@ -379,15 +383,22 @@ int main (void)
 		nk_input_end (ctx);
 
 		/* GUI */
-		if (nk_begin (ctx, "Demo", nk_rect (0, 0,w,h),
+		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
 					  0))
 		{
-			nk_layout_row_dynamic (ctx, 10, 1);
+			nk_layout_row_dynamic (ctx, xw.font->height, 1);
 
 			while (true)
 			{
-				if (nk_button_text (ctx,current->name,current->namel))
-				{puts (current->name); exit (EXIT_SUCCESS);}
+				if (current->type == LBL)
+				{
+					nk_text (ctx,current->name,current->namel,NK_TEXT_CENTERED) ;
+				}
+				else
+				{
+					if (nk_button_text (ctx,current->name,current->namel))
+					{puts (current->name); exit (EXIT_SUCCESS);}
+				}
 
 				if (current->next!=NULL)
 				{
@@ -403,12 +414,6 @@ int main (void)
 		}
 
 		nk_end (ctx);
-
-		if (nk_window_is_hidden (ctx, "Demo"))
-		{
-			break;
-		}
-
 		/* Draw */
 		XClearWindow (xw.dpy, xw.win);
 		nk_xlib_render (xw.win, nk_rgb (30,30,30));
