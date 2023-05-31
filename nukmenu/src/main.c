@@ -20,6 +20,7 @@
 #define NK_IMPLEMENTATION
 #define NK_XLIB_IMPLEMENTATION
 #include "../../colibs/nuklear.h"
+#include "../../colibs/err.h"
 #include "../../colibs/nuklear_xlib.h"
 
 #define DTIME           20
@@ -133,7 +134,7 @@ char * getstdin()
 	buffer[buffersize] = '\0';
 	return buffer;
 }
-struct menu_item * parse_buffer (char * buffer,size_t * item_count)
+struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth )
 {
 	struct menu_item * head;
 	struct menu_item * prev;
@@ -146,11 +147,12 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 	*item_count=0;
 
 	/*Going thru the buffer character by character*/
+
 	while (buffer[i]!='\0')
 	{
 		if (last_char_was_newline)
 		{
-			if (buffer[i]!=',')
+			if (buffer[i+depth]!=',')
 			{
 				if (*item_count!=0)
 				{
@@ -181,6 +183,8 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 					prev=current;
 					current=current->next;
 
+				}
+
 					if (buffer[i]=='\n')
 					{
 						do
@@ -188,11 +192,11 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 							i++;
 						}
 						while (buffer[i]=='\n');
-							if (buffer[i]=='\0')
-							{break;}
-					}
-				}
 
+						if (buffer[i]=='\0')
+						{break;}
+					}
+			i+=depth;
 				/*Checking if item has a type*/
 				if (buffer[i+3]==':')
 				{
@@ -215,6 +219,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count)
 				if (current->type!=MOR)
 				{
 					current->namel= (buffer+i)-current->name-1;
+			i+=depth;
 					current->submenu_text=buffer+i-1;
 				}
 
@@ -282,7 +287,104 @@ float find_max_text_width (struct menu_item * head, XFont * font)
 	current = head;
 	return max_text_width;
 }
-int main (void)
+struct args
+{
+	unsigned int dp;
+	unsigned int x;
+	unsigned int y;
+	unsigned int vp;
+	unsigned int hp;
+};
+unsigned int  strtouint (char * str,char ** restrict endptr,int b)
+{
+	long ret;
+	ret= strtoul (str,endptr,b);
+
+	if (errno!=EINVAL&& errno!=ERANGE)
+	{
+		return (unsigned int) ret;
+	}
+
+	die ("Invalid number %s",str);
+	return 0;
+}
+struct args parse_args (int argc, char ** argv)
+{
+	struct args args= {0};
+	int i = 1;
+
+	while (i < argc)
+	{
+		if (* (argv[i]) =='-')
+		{
+			argv[i]++;
+
+			if (strncmp (argv[i], "h",2) ==0)
+			{
+				die ("numenu \"[ -h , -x x-pos, -y y-pos, -hp horizontal-padding, -vp vertical-padding, -dp depth]\"");
+				argc++;
+			}
+			else if (strncmp (argv[i], "dp",2) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+
+				args.dp = strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
+			else if (strncmp (argv[i], "x",1) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+				args.x = strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
+			else if (strncmp (argv[i], "y",1) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+				args.y = strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
+			else if (strncmp (argv[i], "vp",2) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+				args.vp = strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
+			else if (strncmp (argv[i], "hp",2) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+				args.hp = strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
+			else
+			{
+				die ("Unknown argument -%s \n", argv[i]) ;
+			}
+		}
+		else
+		{
+			die ("Invalid argument %s \n", argv[i]) ;
+		}
+	}
+
+return args;
+}
+
+int main (int argc, char * * argv)
 {
 	long dt;
 	long started;
@@ -294,9 +396,12 @@ int main (void)
 	struct menu_item * head;
 	float max_text_width=0;
 	float width;
+	float rowheight;
 	float w,h;
 	struct nk_color;
-	current = parse_buffer (getstdin(), &num);
+	struct args args ;
+	args=parse_args (argc,argv);
+	current = parse_buffer (getstdin(), &num, args.dp);
 	head=current;
 	/* X11 */
 	memset (&xw, 0, sizeof xw);
@@ -309,8 +414,9 @@ int main (void)
 
 	xw.font = nk_xfont_create (xw.dpy, "fixed");
 	max_text_width = find_max_text_width (head, xw.font);
-	w=max_text_width;
-	h=num*xw.font->height;
+	rowheight=xw.font->height+args.vp;
+	w=max_text_width+args.hp;
+	h=num*rowheight;
 	xw.root = DefaultRootWindow (xw.dpy);
 	xw.screen = XDefaultScreen (xw.dpy);
 	xw.vis = XDefaultVisual (xw.dpy, xw.screen);
@@ -321,7 +427,7 @@ int main (void)
 		ButtonPress | ButtonReleaseMask| ButtonMotionMask |
 		Button1MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask|
 		PointerMotionMask | KeymapStateMask;
-	xw.win = XCreateWindow (xw.dpy, xw.root, 0, 0, w, h, 0,
+	xw.win = XCreateWindow (xw.dpy, xw.root,args.x,args.y, w, h, 0,
 							XDefaultDepth (xw.dpy, xw.screen), InputOutput,
 							xw.vis, CWEventMask | CWColormap, &xw.swa);
 	XStoreName (xw.dpy, xw.win, "X11");
@@ -386,7 +492,7 @@ int main (void)
 		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
 					  0))
 		{
-			nk_layout_row_dynamic (ctx, xw.font->height, 1);
+			nk_layout_row_dynamic (ctx, rowheight, 1);
 
 			while (true)
 			{
