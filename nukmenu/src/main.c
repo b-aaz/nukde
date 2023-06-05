@@ -82,6 +82,35 @@ static void sleep_for (long t)
 	#define INCLUDE_OVERVIEW
 	#define INCLUDE_NODE_EDITOR
 #endif
+void print_chars ( char *  str , size_t strl ) 
+{
+	size_t i = 0 ;
+	printf  ("<START>\n_______\n");
+	while ( i < strl ) 
+	{
+		switch (str[i])
+		{
+		case '\n' :
+			printf("<newline>");
+			break ;
+		case '\0' :
+			printf("<NULL>");
+			break ;
+		case '\t' :
+			printf("<Tab>");
+			break ;
+		case ' ' :
+			printf("<Space>");
+			break ;
+		
+		default :
+			printf("%c" , str[i] ); 
+	}
+		i++;
+
+	}
+	printf  ("\n_______\n<END>\n");
+}
 enum  item_type { NRM =0, LBL =1, IMG =2,MOR=3};
 struct menu_item
 {
@@ -116,10 +145,8 @@ char * getstdin()
 	size_t buffersize = 0;
 	size_t allocatedsize = BUF_INIT_SIZE;
 
-	while (!feof (stdin))
+	while (	fread (&character, 1, 1, stdin))
 	{
-		fread (&character, 1, 1, stdin);
-
 		if (buffersize >= allocatedsize)
 		{
 			allocatedsize *= 2;
@@ -130,11 +157,13 @@ char * getstdin()
 		buffersize++;
 	}
 
-	buffer = realloc (buffer, buffersize+1);
-	buffer[buffersize] = '\0';
+	buffer = realloc (buffer, buffersize+3);
+	buffer[buffersize] = '\n';
+	buffer[buffersize+1] = '\n';
+	buffer[buffersize+2] = '\0';
 	return buffer;
 }
-struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth )
+struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth)
 {
 	struct menu_item * head;
 	struct menu_item * prev;
@@ -182,21 +211,22 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 					current->next=malloc (sizeof (struct menu_item));
 					prev=current;
 					current=current->next;
-
 				}
 
-					if (buffer[i]=='\n')
+				if (buffer[i]=='\n')
+				{
+					do
 					{
-						do
-						{
-							i++;
-						}
-						while (buffer[i]=='\n');
-
-						if (buffer[i]=='\0')
-						{break;}
+						i++;
 					}
-			i+=depth;
+					while (buffer[i]=='\n');
+
+					if (buffer[i]=='\0')
+					{break;}
+				}
+
+				i+=depth;
+
 				/*Checking if item has a type*/
 				if (buffer[i+3]==':')
 				{
@@ -219,8 +249,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 				if (current->type!=MOR)
 				{
 					current->namel= (buffer+i)-current->name-1;
-			i+=depth;
-					current->submenu_text=buffer+i-1;
+					current->submenu_text=buffer+i;
 				}
 
 				current->type=MOR;
@@ -245,7 +274,10 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 		if (buffer[i]=='\n')
 		{
 			last_char_was_newline=true;
-			buffer[i]='\0';
+			if ( current -> type != MOR ) 
+			{
+				buffer[i]='\0';
+			}
 		}
 		else
 		{
@@ -340,6 +372,7 @@ struct args parse_args (int argc, char ** argv)
 				{
 					die ("Option -%s requires a argument",argv[i]);
 				}
+
 				args.x = strtouint (argv[i+1],NULL,10);
 				i+=2;
 			}
@@ -349,6 +382,7 @@ struct args parse_args (int argc, char ** argv)
 				{
 					die ("Option -%s requires a argument",argv[i]);
 				}
+
 				args.y = strtouint (argv[i+1],NULL,10);
 				i+=2;
 			}
@@ -358,6 +392,7 @@ struct args parse_args (int argc, char ** argv)
 				{
 					die ("Option -%s requires a argument",argv[i]);
 				}
+
 				args.vp = strtouint (argv[i+1],NULL,10);
 				i+=2;
 			}
@@ -367,6 +402,7 @@ struct args parse_args (int argc, char ** argv)
 				{
 					die ("Option -%s requires a argument",argv[i]);
 				}
+
 				args.hp = strtouint (argv[i+1],NULL,10);
 				i+=2;
 			}
@@ -381,9 +417,21 @@ struct args parse_args (int argc, char ** argv)
 		}
 	}
 
-return args;
+	return args;
 }
 
+bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int depth,char * submenutext, size_t submenutextl)
+{
+	FILE * child_stdin;
+	char * progstr;
+	fflush(NULL);
+	sprintf ( progstr , "./bin/nukmenu -dp %u",depth+1 ); 	
+	child_stdin = popen (progstr, "w") ;
+	fwrite (submenutext,  submenutextl,1,child_stdin) ;
+	fflush(child_stdin);
+	pclose (child_stdin);
+	return 1;
+}
 int main (int argc, char * * argv)
 {
 	long dt;
@@ -503,7 +551,20 @@ int main (int argc, char * * argv)
 				else
 				{
 					if (nk_button_text (ctx,current->name,current->namel))
-					{puts (current->name); exit (EXIT_SUCCESS);}
+					{
+						if (current->type!=MOR)
+						{
+							puts (current->name);
+							exit (EXIT_SUCCESS);
+						}
+						else
+						{
+							if (lunchsubmenu (0,0,args.dp,current->submenu_text,current->submenu_textl))
+							{
+								exit (EXIT_SUCCESS);
+							}
+						}
+					}
 				}
 
 				if (current->next!=NULL)
