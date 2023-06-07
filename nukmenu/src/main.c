@@ -420,12 +420,12 @@ struct args parse_args (int argc, char ** argv)
 	return args;
 }
 
-bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int depth,char * submenutext, size_t submenutextl)
+bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int w ,unsigned int relative_h,unsigned int depth,char * submenutext, size_t submenutextl)
 {
 	FILE * child_stdin;
 	char * progstr;
 	fflush(NULL);
-	sprintf ( progstr , "./bin/nukmenu -dp %u",depth+1 ); 	
+	asprintf ( &progstr , "./bin/nukmenu -dp %u -x %u -y %u",depth+1,x+w,relative_h+y); 	
 	child_stdin = popen (progstr, "w") ;
 	fwrite (submenutext,  submenutextl,1,child_stdin) ;
 	fflush(child_stdin);
@@ -437,7 +437,7 @@ int main (int argc, char * * argv)
 	long dt;
 	long started;
 	int running = 1;
-	size_t num=8;
+	size_t num;
 	XWindow xw;
 	struct nk_context * ctx;
 	struct menu_item * current ;
@@ -448,6 +448,7 @@ int main (int argc, char * * argv)
 	float w,h;
 	struct nk_color;
 	struct args args ;
+	unsigned int itemcounter;
 	args=parse_args (argc,argv);
 	current = parse_buffer (getstdin(), &num, args.dp);
 	head=current;
@@ -540,10 +541,12 @@ int main (int argc, char * * argv)
 		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
 					  0))
 		{
+		itemcounter = 0 ;		
 			nk_layout_row_dynamic (ctx, rowheight, 1);
 
 			while (true)
 			{
+
 				if (current->type == LBL)
 				{
 					nk_text (ctx,current->name,current->namel,NK_TEXT_CENTERED) ;
@@ -559,7 +562,8 @@ int main (int argc, char * * argv)
 						}
 						else
 						{
-							if (lunchsubmenu (0,0,args.dp,current->submenu_text,current->submenu_textl))
+							if (lunchsubmenu (args.x,args.y,w,itemcounter*rowheight
+										,args.dp,current->submenu_text,current->submenu_textl))
 							{
 								exit (EXIT_SUCCESS);
 							}
@@ -570,6 +574,7 @@ int main (int argc, char * * argv)
 				if (current->next!=NULL)
 				{
 					current=current->next;
+					++itemcounter;
 				}
 				else
 				{
