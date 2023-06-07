@@ -432,6 +432,22 @@ bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int w ,unsigned int re
 	pclose (child_stdin);
 	return 1;
 }
+void getcursorpos (Display * dpy , Window root , int * x ,int * y ) 
+{
+	/* Oh look at what we got here!!!
+	 * this function will stay here to be a 
+	 * monument for the stupidity of some "programmers"
+	 * 5 use less variables just to get a simple cursor position 
+	 * I think I'm going mad
+	 */
+	Window   useless_variable_cause_xlib_sucks1;
+	Window  useless_variable_cause_xlib_sucks2;
+	int  useless_variable_cause_xlib_sucks3;
+	int  useless_variable_cause_xlib_sucks4;
+	unsigned int  useless_variable_cause_xlib_sucks5;
+       XQueryPointer(dpy,root,&useless_variable_cause_xlib_sucks1,&useless_variable_cause_xlib_sucks2,x,y,&useless_variable_cause_xlib_sucks3,&useless_variable_cause_xlib_sucks4,&useless_variable_cause_xlib_sucks5);
+       /* if you know a better way to do this DO it and tell me */
+}
 int main (int argc, char * * argv)
 {
 	long dt;
@@ -476,6 +492,13 @@ int main (int argc, char * * argv)
 		ButtonPress | ButtonReleaseMask| ButtonMotionMask |
 		Button1MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask|
 		PointerMotionMask | KeymapStateMask;
+	if (args.dp==0) 
+	{
+		int px, py ;
+		getcursorpos (xw.dpy,xw.root,&px,&py);
+       args.x+=px;
+       args.y+=py;
+	}
 	xw.win = XCreateWindow (xw.dpy, xw.root,args.x,args.y, w, h, 0,
 							XDefaultDepth (xw.dpy, xw.screen), InputOutput,
 							xw.vis, CWEventMask | CWColormap, &xw.swa);
