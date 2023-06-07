@@ -420,12 +420,12 @@ struct args parse_args (int argc, char ** argv)
 	return args;
 }
 
-bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int w ,unsigned int relative_h,unsigned int depth,char * submenutext, size_t submenutextl)
+bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int w ,unsigned int relative_h,unsigned int hp , unsigned int vp,unsigned int depth,char * submenutext, size_t submenutextl)
 {
 	FILE * child_stdin;
 	char * progstr;
 	fflush(NULL);
-	asprintf ( &progstr , "./bin/nukmenu -dp %u -x %u -y %u",depth+1,x+w,relative_h+y); 	
+	asprintf ( &progstr , "./bin/nukmenu -dp %u -x %u -y %u -hp %u -vp %u",depth+1,x+w,relative_h+y,hp,vp); 	
 	child_stdin = popen (progstr, "w") ;
 	fwrite (submenutext,  submenutextl,1,child_stdin) ;
 	fflush(child_stdin);
@@ -562,7 +562,7 @@ int main (int argc, char * * argv)
 						}
 						else
 						{
-							if (lunchsubmenu (args.x,args.y,w,itemcounter*rowheight
+							if (lunchsubmenu (args.x,args.y,w,itemcounter*rowheight,args.hp,args.vp	
 										,args.dp,current->submenu_text,current->submenu_textl))
 							{
 								exit (EXIT_SUCCESS);
