@@ -1,4 +1,3 @@
-/* nuklear - v1.32.0 - public domain */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,9 +6,9 @@
 #include <limits.h>
 #include <math.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
-#include<stdbool.h>
 #include<string.h>
 #define BUF_INIT_SIZE 256
 
@@ -21,10 +20,11 @@
 #define NK_XLIB_IMPLEMENTATION
 #include "../../colibs/nuklear.h"
 #include "../../colibs/err.h"
+#include "../../colibs/bool.h"
+#include "../../colibs/spawn.h"
 #include "../../colibs/nuklear_xlib.h"
 
 #define DTIME           20
-
 typedef struct XWindow XWindow;
 struct XWindow
 {
@@ -82,35 +82,42 @@ static void sleep_for (long t)
 	#define INCLUDE_OVERVIEW
 	#define INCLUDE_NODE_EDITOR
 #endif
-void print_chars ( char *  str , size_t strl ) 
+
+void print_chars (char  * str, size_t strl)
 {
 	size_t i = 0 ;
-	printf  ("<START>\n_______\n");
-	while ( i < strl ) 
+	printf ("<START>\n_______\n");
+
+	while (i < strl)
 	{
 		switch (str[i])
 		{
-		case '\n' :
-			printf("<newline>");
-			break ;
-		case '\0' :
-			printf("<NULL>");
-			break ;
-		case '\t' :
-			printf("<Tab>");
-			break ;
-		case ' ' :
-			printf("<Space>");
-			break ;
-		
-		default :
-			printf("%c" , str[i] ); 
-	}
-		i++;
+			case '\n' :
+				printf ("<newline>");
+				break ;
 
+			case '\0' :
+				printf ("<NULL>");
+				break ;
+
+			case '\t' :
+				printf ("<Tab>");
+				break ;
+
+			case ' ' :
+				printf ("<Space>");
+				break ;
+
+			default :
+				printf ("%c", str[i]);
+		}
+
+		i++;
 	}
-	printf  ("\n_______\n<END>\n");
+
+	printf ("\n_______\n<END>\n");
 }
+
 enum  item_type { NRM =0, LBL =1, IMG =2,MOR=3};
 struct menu_item
 {
@@ -145,7 +152,7 @@ char * getstdin()
 	size_t buffersize = 0;
 	size_t allocatedsize = BUF_INIT_SIZE;
 
-	while (	fread (&character, 1, 1, stdin))
+	while (fread (&character, 1, 1, stdin))
 	{
 		if (buffersize >= allocatedsize)
 		{
@@ -274,7 +281,8 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 		if (buffer[i]=='\n')
 		{
 			last_char_was_newline=true;
-			if ( current -> type != MOR ) 
+
+			if (current -> type != MOR)
 			{
 				buffer[i]='\0';
 			}
@@ -353,7 +361,7 @@ struct args parse_args (int argc, char ** argv)
 
 			if (strncmp (argv[i], "h",2) ==0)
 			{
-				die ("numenu \"[ -h , -x x-pos, -y y-pos, -hp horizontal-padding, -vp vertical-padding, -dp depth]\"");
+				die ("nukmenu \"[ -h , -x x-pos, -y y-pos, -hp horizontal-padding, -vp vertical-padding, -dp depth]\"");
 				argc++;
 			}
 			else if (strncmp (argv[i], "dp",2) ==0)
@@ -419,25 +427,38 @@ struct args parse_args (int argc, char ** argv)
 
 	return args;
 }
-
-bool lunchsubmenu (unsigned int x,unsigned int y,unsigned int w ,unsigned int relative_h,unsigned int hp , unsigned int vp,unsigned int depth,char * submenutext, size_t submenutextl)
+pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp)
 {
-	FILE * child_stdin;
-	char * progstr;
-	fflush(NULL);
-	asprintf ( &progstr , "./bin/nukmenu -dp %u -x %u -y %u -hp %u -vp %u",depth+1,x+w,relative_h+y,hp,vp); 	
-	child_stdin = popen (progstr, "w") ;
-	fwrite (submenutext,  submenutextl,1,child_stdin) ;
-	fflush(child_stdin);
-	pclose (child_stdin);
-	return 1;
+	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
+	char * args [12] = { "./bin/nukmenu","-dp",malloc (uintdigs),"-x",malloc (uintdigs),"-y",malloc (uintdigs),"-hp",malloc (uintdigs),"-vp",malloc (uintdigs), NULL};
+	snprintf (args[2], uintdigs, "%u", dp) ;
+	snprintf (args[4], uintdigs, "%u", x) ;
+	snprintf (args[6], uintdigs, "%u", y) ;
+	snprintf (args[8], uintdigs, "%u", hp) ;
+	snprintf (args[10], uintdigs, "%u", vp) ;
+	return spawn (args, fd, SPAWN_RW) ;
 }
-void getcursorpos (Display * dpy , Window root , int * x ,int * y ) 
+int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp)
+{
+	int  fd [2];
+	char ch;
+	int stat;
+	spawnmenu (fd,depth,x,y,hp,vp) ;
+	write (fd[1],submenutext,  submenutextl) ;
+	close (fd[1]) ;
+	wait (&stat) ;
+
+	while (read (fd[0], &ch, 1))
+	{ write (1, &ch, 1) ; }
+
+	return stat;
+}
+void getcursorpos (Display * dpy, Window root, int * x,int * y)
 {
 	/* Oh look at what we got here!!!
-	 * this function will stay here to be a 
+	 * this function will stay here to be a
 	 * monument for the stupidity of some "programmers"
-	 * 5 use less variables just to get a simple cursor position 
+	 * 5 use less variables just to get a simple cursor position
 	 * I think I'm going mad
 	 */
 	Window   useless_variable_cause_xlib_sucks1;
@@ -445,8 +466,8 @@ void getcursorpos (Display * dpy , Window root , int * x ,int * y )
 	int  useless_variable_cause_xlib_sucks3;
 	int  useless_variable_cause_xlib_sucks4;
 	unsigned int  useless_variable_cause_xlib_sucks5;
-       XQueryPointer(dpy,root,&useless_variable_cause_xlib_sucks1,&useless_variable_cause_xlib_sucks2,x,y,&useless_variable_cause_xlib_sucks3,&useless_variable_cause_xlib_sucks4,&useless_variable_cause_xlib_sucks5);
-       /* if you know a better way to do this DO it and tell me */
+	XQueryPointer (dpy,root,&useless_variable_cause_xlib_sucks1,&useless_variable_cause_xlib_sucks2,x,y,&useless_variable_cause_xlib_sucks3,&useless_variable_cause_xlib_sucks4,&useless_variable_cause_xlib_sucks5);
+	/* if you know a better way to do this DO it and tell me */
 }
 int main (int argc, char * * argv)
 {
@@ -465,6 +486,7 @@ int main (int argc, char * * argv)
 	struct nk_color;
 	struct args args ;
 	unsigned int itemcounter;
+	bool ignoreleave = false ;
 	args=parse_args (argc,argv);
 	current = parse_buffer (getstdin(), &num, args.dp);
 	head=current;
@@ -488,17 +510,19 @@ int main (int argc, char * * argv)
 	xw.cmap = XCreateColormap (xw.dpy,xw.root,xw.vis,AllocNone);
 	xw.swa.colormap = xw.cmap;
 	xw.swa.event_mask =
-		ExposureMask | KeyPressMask | KeyReleaseMask |
+		LeaveWindowMask|	ExposureMask | KeyPressMask | KeyReleaseMask |
 		ButtonPress | ButtonReleaseMask| ButtonMotionMask |
 		Button1MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask|
 		PointerMotionMask | KeymapStateMask;
-	if (args.dp==0) 
+
+	if (args.dp==0)
 	{
 		int px, py ;
 		getcursorpos (xw.dpy,xw.root,&px,&py);
-       args.x+=px;
-       args.y+=py;
+		args.x+=px-args.hp/2;
+		args.y+=py-args.vp/2;
 	}
+
 	xw.win = XCreateWindow (xw.dpy, xw.root,args.x,args.y, w, h, 0,
 							XDefaultDepth (xw.dpy, xw.screen), InputOutput,
 							xw.vis, CWEventMask | CWColormap, &xw.swa);
@@ -550,6 +574,18 @@ int main (int argc, char * * argv)
 				goto cleanup;
 			}
 
+			if (evt.type == LeaveNotify)
+			{
+				if (ignoreleave)
+				{
+					ignoreleave = false;
+				}
+				else
+				{
+					exit (EXIT_FAILURE);
+				}
+			}
+
 			if (XFilterEvent (&evt, xw.win))
 			{
 				continue;
@@ -564,12 +600,11 @@ int main (int argc, char * * argv)
 		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
 					  0))
 		{
-		itemcounter = 0 ;		
+			itemcounter = 0 ;
 			nk_layout_row_dynamic (ctx, rowheight, 1);
 
 			while (true)
 			{
-
 				if (current->type == LBL)
 				{
 					nk_text (ctx,current->name,current->namel,NK_TEXT_CENTERED) ;
@@ -585,8 +620,10 @@ int main (int argc, char * * argv)
 						}
 						else
 						{
-							if (lunchsubmenu (args.x,args.y,w,itemcounter*rowheight,args.hp,args.vp	
-										,args.dp,current->submenu_text,current->submenu_textl))
+							/*We are going to launch a sub-menu*/
+							ignoreleave=true;
+
+							if (WEXITSTATUS (launchsubmenu (current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp )) ==EXIT_SUCCESS)
 							{
 								exit (EXIT_SUCCESS);
 							}

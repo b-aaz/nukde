@@ -7,7 +7,15 @@ BIN=nukmenu
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
 CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
+OBFILES=$(BINDIR)main.o
+COOBFILES=$(COBINDIR)spawn.o
 
-$(BINDIR)$(BIN): $(SRC)main.c
+$(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	$(MAKEDIR)
-	cc $(CFLAGS)  $(SRC)main.c -o $@ -lX11 -lm -lcrypt 
+	cc  $(OBFILES) $(COOBFILES) $(CFLAGS) -o $@ -lX11
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h 
+	$(MAKEDIR)
+	cc -c $(SRC)main.c $(CFLAGS)  -o $@ 
+$(COBINDIR)spawn.o:$(COLIBS)spawn.c $(COLIBS)spawn.h $(COLIBS)err.h
+	$(MAKEDIR)
+	cc -c  $(COLIBS)spawn.c  $(LIBCFLAGS) $(CFLAGS) -o $@
