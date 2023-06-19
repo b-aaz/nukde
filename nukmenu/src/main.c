@@ -455,16 +455,17 @@ pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsi
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
 	char * args [14];
+	pid_t cpid;
 	args[0] = "./bin/nukmenu";
 	args[1] = "-dp";
-	args[2] = malloc (uintdigs);
 	args[3] = "-x";
-	args[4] = malloc (uintdigs);
 	args[5] = "-y";
-	args[6] = malloc (uintdigs);
 	args[7] = "-hp";
-	args[8] = malloc (uintdigs);
 	args[9] = "-vp";
+	args[2] = malloc (uintdigs);
+	args[4] = malloc (uintdigs);
+	args[6] = malloc (uintdigs);
+	args[8] = malloc (uintdigs);
 	args[10] = malloc (uintdigs);
 	snprintf (args[2], uintdigs, "%u", dp) ;
 	snprintf (args[4], uintdigs, "%u", x) ;
@@ -484,9 +485,21 @@ pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsi
 		args[11]=NULL;
 	}
 
-	return spawn (args, fd, SPAWN_RW) ;
+	cpid=spawn (args, fd, SPAWN_RW) ;
+	free (args[2]);
+	free (args[4]);
+	free (args[6]);
+	free (args[8]);
+	free (args[10]);
+
+	if (id.return_id)
+	{
+		free (args[12]);
+	}
+
+	return cpid;
 }
-int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp , struct id id)
+int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct id id)
 {
 	int  fd [2];
 	char ch;
@@ -678,8 +691,8 @@ int main (int argc, char * * argv)
 						{
 							/*We are going to launch a sub-menu*/
 							ignoreleave=true;
-
 							args.id.num=++current->id;
+
 							if (WEXITSTATUS (launchsubmenu (current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
 							{
 								exit (EXIT_SUCCESS);
