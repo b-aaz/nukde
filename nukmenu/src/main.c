@@ -129,6 +129,7 @@ struct menu_item
 	char * icpath;
 	char * submenu_text;
 	size_t submenu_textl;
+	unsigned int id;
 	struct menu_item * next ;
 };
 enum item_type detect_type (char * type)
@@ -170,7 +171,12 @@ char * getstdin()
 	buffer[buffersize+2] = '\0';
 	return buffer;
 }
-struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth)
+struct id
+{
+	bool return_id;
+	unsigned int num;
+};
+struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth, struct id id)
 {
 	struct menu_item * head;
 	struct menu_item * prev;
@@ -248,6 +254,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 					current->type=NRM;
 				}
 
+				current->id=id.num;
 				current->name=buffer+i;
 				++*item_count;
 			}
@@ -280,6 +287,11 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 
 		if (buffer[i]=='\n')
 		{
+			if (id.return_id)
+			{
+				++id.num;
+			}
+
 			last_char_was_newline=true;
 
 			if (current -> type != MOR)
@@ -334,6 +346,7 @@ struct args
 	unsigned int y;
 	unsigned int vp;
 	unsigned int hp;
+	struct id id;
 };
 unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 {
@@ -414,6 +427,17 @@ struct args parse_args (int argc, char ** argv)
 				args.hp = strtouint (argv[i+1],NULL,10);
 				i+=2;
 			}
+			else if (strncmp (argv[i], "id",2) ==0)
+			{
+				if (i+1>=argc)
+				{
+					die ("Option -%s requires a argument",argv[i]);
+				}
+
+				args.id.return_id = true ;
+				args.id.num=strtouint (argv[i+1],NULL,10);
+				i+=2;
+			}
 			else
 			{
 				die ("Unknown argument -%s \n", argv[i]) ;
@@ -427,23 +451,47 @@ struct args parse_args (int argc, char ** argv)
 
 	return args;
 }
-pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp)
+pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
-	char * args [12] = { "./bin/nukmenu","-dp",malloc (uintdigs),"-x",malloc (uintdigs),"-y",malloc (uintdigs),"-hp",malloc (uintdigs),"-vp",malloc (uintdigs), NULL};
+	char * args [14];
+	args[0] = "./bin/nukmenu";
+	args[1] = "-dp";
+	args[2] = malloc (uintdigs);
+	args[3] = "-x";
+	args[4] = malloc (uintdigs);
+	args[5] = "-y";
+	args[6] = malloc (uintdigs);
+	args[7] = "-hp";
+	args[8] = malloc (uintdigs);
+	args[9] = "-vp";
+	args[10] = malloc (uintdigs);
 	snprintf (args[2], uintdigs, "%u", dp) ;
 	snprintf (args[4], uintdigs, "%u", x) ;
 	snprintf (args[6], uintdigs, "%u", y) ;
 	snprintf (args[8], uintdigs, "%u", hp) ;
 	snprintf (args[10], uintdigs, "%u", vp) ;
+
+	if (id.return_id)
+	{
+		args[11]="-id";
+		args[12]=malloc (uintdigs);
+		snprintf (args[12], uintdigs, "%u", id.num) ;
+		args[13]=NULL;
+	}
+	else
+	{
+		args[11]=NULL;
+	}
+
 	return spawn (args, fd, SPAWN_RW) ;
 }
-int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp)
+int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp , struct id id)
 {
 	int  fd [2];
 	char ch;
 	int stat;
-	spawnmenu (fd,depth,x,y,hp,vp) ;
+	spawnmenu (fd,depth,x,y,hp,vp,id) ;
 	write (fd[1],submenutext,  submenutextl) ;
 	close (fd[1]) ;
 	wait (&stat) ;
@@ -488,7 +536,7 @@ int main (int argc, char * * argv)
 	unsigned int itemcounter;
 	bool ignoreleave = false ;
 	args=parse_args (argc,argv);
-	current = parse_buffer (getstdin(), &num, args.dp);
+	current = parse_buffer (getstdin(), &num, args.dp, args.id);
 	head=current;
 	/* X11 */
 	memset (&xw, 0, sizeof xw);
@@ -615,7 +663,15 @@ int main (int argc, char * * argv)
 					{
 						if (current->type!=MOR)
 						{
-							puts (current->name);
+							if (args.id.return_id)
+							{
+								printf ("%u\n", current->id);
+							}
+							else
+							{
+								puts (current->name);
+							}
+
 							exit (EXIT_SUCCESS);
 						}
 						else
@@ -623,7 +679,8 @@ int main (int argc, char * * argv)
 							/*We are going to launch a sub-menu*/
 							ignoreleave=true;
 
-							if (WEXITSTATUS (launchsubmenu (current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp )) ==EXIT_SUCCESS)
+							args.id.num=++current->id;
+							if (WEXITSTATUS (launchsubmenu (current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
 							{
 								exit (EXIT_SUCCESS);
 							}
