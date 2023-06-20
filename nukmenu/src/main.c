@@ -196,6 +196,11 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 		{
 			if (buffer[i+depth]!=',')
 			{
+				if (current->type==LBL)
+				{
+						--id.num;
+				}
+
 				if (*item_count!=0)
 				{
 					switch (current->type)
@@ -212,14 +217,13 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 							current->namel= (buffer+i)-current->name-1;
 					}
 
-					/*If the current type is a label move the item to the start of the list */
-					if (current->type==LBL)
+					/*If the current type is a label and it is not already at the start ,move the item to the start of the list */
+					if (current->type==LBL&&current != head)
 					{
 						current->next=head;
 						head=current;
 						current=prev;
 					}
-
 					/*Creating a new node*/
 					current->next=malloc (sizeof (struct menu_item));
 					prev=current;
