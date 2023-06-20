@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fileinfo_type.h"
 
+void launch(char * openbuff,struct fileinfo file);
 void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect);
 
 #endif 

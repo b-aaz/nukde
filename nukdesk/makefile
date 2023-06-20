@@ -8,7 +8,7 @@ BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
 CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
 OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o $(BINDIR)ffload.o $(BINDIR)fileops.o $(BINDIR)config-parser.o $(BINDIR)icon-widget.o $(BINDIR)icon-loader.o $(BINDIR)sortfiles.o
-COOBFILES=
+COOBFILES=$(COBINDIR)spawn.o
 
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
@@ -17,7 +17,7 @@ $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES)
 $(BINDIR)nusort.o: $(LIBS)nusort.c $(LIBS)nusort.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)nusort.c $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(LIBS)icon-widget.h  $(LIBS)icon-loader.h $(LIBS)fileops.h $(LIBS)sortfiles.h 
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)spawn.h $(LIBS)icon-widget.h  $(LIBS)icon-loader.h $(LIBS)fileops.h $(LIBS)sortfiles.h 
 	$(MAKEDIR)
 	cc -c  $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@
 $(BINDIR)ffload.o:$(LIBS)ffload.c $(LIBS)ffload.h $(COLIBS)err.h 
@@ -38,3 +38,6 @@ $(BINDIR)icon-loader.o:$(LIBS)icon-loader.c $(LIBS)icon-loader.h $(COLIBS)err.h 
 $(BINDIR)sortfiles.o:$(LIBS)sortfiles.c $(LIBS)sortfiles.h $(COLIBS)err.h $(LIBS)fileinfo_type.h $(LIBS)nusort.h
 	$(MAKEDIR)
 		cc -c  $(LIBS)sortfiles.c  $(LIBCFLAGS) $(CFLAGS) -o $@
+$(COBINDIR)spawn.o:$(COLIBS)spawn.c $(COLIBS)spawn.h $(COLIBS)err.h
+	$(MAKEDIR)
+		cc -c  $(COLIBS)spawn.c  $(LIBCFLAGS) $(CFLAGS) -o $@

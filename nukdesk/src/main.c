@@ -32,6 +32,7 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #include "../../colibs/err.h"           /* for die*/
 #include "../../colibs/bool.h"     /* for false, true*/
+#include "../../colibs/spawn.h"
 #include "../../colibs/nuklear.h"  /* for nk_vec2, nk_button_label, nk_...*/
 #include "GL/gl.h"                      /* for GLint, glClear, glViewport*/
 #include "GL/glx.h"                     /* for GLXFBConfig, glXGetFBConfigAt...*/
@@ -42,7 +43,7 @@
 #define NK_XLIB_GL3_IMPLEMENTATION
 #define NK_XLIB_LOAD_OPENGL_EXTENSIONS
 #include "lib/fileinfo_type.h"          /* for fileinfo, thrd_icon_load_args*/
-#include "lib/fileops.h"                /* for XWindow, dsk_dir, menupos*/
+#include "lib/fileops.h"                /* for XWindow, dsk_dir, menu*/
 #include "lib/icon-loader.h"            /* for load_image_open_resize, loadicon*/
 #include "lib/icon-widget.h"            /* for draw_icon*/
 #include "lib/nuklear_xlib_gl3.h"       /* for nk_x11_font_stash_begin, nk_x...*/
@@ -52,7 +53,90 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
+#define NUKMENU "../nukmenu/bin/nukmenu"
+#define MENUINPUT "remove\nopen\n\n"
+#define MENUINPUTLEN 14
+#define MAXMENUITEMLEN 3
 
+enum items
+{
+	REMOVE = 0,
+	OPEN = 1,
+};
+struct menu
+{
+	bool menu;
+	bool spawn;
+	bool isrunning;
+	int fd [2];
+	enum items selected;
+};
+struct id
+{
+	bool return_id;
+	unsigned int num;
+};
+unsigned int  strtouint (char * str,char ** restrict endptr,int b)
+{
+	long ret;
+	ret= strtoul (str,endptr,b);
+
+	if (errno!=EINVAL&& errno!=ERANGE)
+	{
+		return (unsigned int) ret;
+	}
+
+	die ("Invalid number %s",str);
+	return 0;
+}
+pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
+{
+	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
+	char * args [14];
+	pid_t cpid;
+	args[0] = NUKMENU ;
+	args[1] = "-dp";
+	args[3] = "-x";
+	args[5] = "-y";
+	args[7] = "-hp";
+	args[9] = "-vp";
+	args[2] = malloc (uintdigs);
+	args[4] = malloc (uintdigs);
+	args[6] = malloc (uintdigs);
+	args[8] = malloc (uintdigs);
+	args[10] = malloc (uintdigs);
+	snprintf (args[2], uintdigs, "%u", dp) ;
+	snprintf (args[4], uintdigs, "%u", x) ;
+	snprintf (args[6], uintdigs, "%u", y) ;
+	snprintf (args[8], uintdigs, "%u", hp) ;
+	snprintf (args[10], uintdigs, "%u", vp) ;
+
+	if (id.return_id)
+	{
+		args[11]="-id";
+		args[12]=malloc (uintdigs);
+		snprintf (args[12], uintdigs, "%u", id.num) ;
+		args[13]=NULL;
+	}
+	else
+	{
+		args[11]=NULL;
+	}
+
+	cpid=spawn (args, fd, SPAWN_RW) ;
+	free (args[2]);
+	free (args[4]);
+	free (args[6]);
+	free (args[8]);
+	free (args[10]);
+
+	if (id.return_id)
+	{
+		free (args[12]);
+	}
+
+	return cpid;
+}
 
 struct XWindow
 {
@@ -255,15 +339,17 @@ void choosefb (Display * dpy, int * fb_count, GLXFBConfig   * * fbc)
 		die ("%s","[X11]: Error: failed to retrieve framebuffer configuration\n");
 	}
 }
-struct  nk_font *addfont (const char * font_path,float height , const struct  nk_font_config *cfg)
+struct  nk_font * addfont (const char * font_path,float height, const struct  nk_font_config * cfg)
 
 {
 	struct nk_font_atlas * atlas;
 	nk_x11_font_stash_begin (&atlas);
-	if (font_path!=NULL ) {
 
-    struct nk_font *future = nk_font_atlas_add_from_file(atlas,font_path, height, cfg);
+	if (font_path!=NULL)
+	{
+		struct nk_font * future = nk_font_atlas_add_from_file (atlas,font_path, height, cfg);
 	}
+
 	nk_x11_font_stash_end();
 }
 
@@ -281,6 +367,7 @@ struct nk_context * init_window (struct XWindow * xwin, GLXContext ** glContext)
 	ctx = nk_x11_init (xwin->dpy, xwin->win);
 	return ctx;
 }
+
 int main (void)
 {
 	struct XWindow xwin;
@@ -298,7 +385,7 @@ int main (void)
 	char * iconidx;
 	char * openidx;
 	ctx=init_window (&xwin,&glContext);
-	addfont(NULL,0,0);
+	addfont (NULL,0,0);
 	magic_t magic_cookie_mime=0;
 	magic_t magic_cookie_hr=0;
 	kqid=kqueue();
@@ -375,9 +462,7 @@ int main (void)
 
 	bgimage=load_image_open_resize (BGIMAGE, xwin.width,xwin.height);
 
-	struct menupos menupos;
-
-	menupos.isactive=false;
+	struct menu menu = {0};
 
 	while (running)
 	{
@@ -406,6 +491,85 @@ int main (void)
 		ctx->style.window.padding = nk_vec2 (0,0);
 		ctx->style.window.spacing = nk_vec2 (0,0);
 		ctx->style.window.scrollbar_size = nk_vec2 (0,0);
+
+		if (menu.spawn)
+		{
+			struct id id ;
+			id.return_id=true;
+			id.num=0;
+			spawnmenu (menu.fd,0,0,0, 10, 10, id);
+			fcntl (menu.fd[0],O_NONBLOCK);
+			write (menu.fd[1], MENUINPUT, MENUINPUTLEN) ;
+			close (menu.fd[1]);
+			menu.spawn=false ;
+			menu.isrunning=true;
+		}
+
+		if (menu.isrunning)
+		{
+			{
+				char rt ;
+				char ch;
+				char ret_str [3];
+				char * pret_str = ret_str;
+				unsigned int sif=0;
+
+				while (true)
+				{
+					rt = read (menu.fd[0], &ch, 1) ;
+
+					if (rt==0)
+					{
+						if (pret_str>ret_str)
+						{
+							*pret_str='\0';
+							puts (ret_str) ;
+							menu.selected=strtouint (ret_str,NULL,10);
+
+							switch (menu.selected)
+							{
+								case REMOVE :
+									while (sif<fnum)
+									{
+										if (files[sif]->isselected==true)
+										{
+											remove (files[sif]->path);
+										}
+
+										files[sif]->isselected=false;
+										sif++;
+									}
+
+								case OPEN :
+									while (sif<fnum)
+									{
+										if (files[sif]->isselected==true)
+										{
+											launch(openidx,*files[sif]);
+										}
+
+										files[sif]->isselected=false;
+										sif++;
+									}
+							}
+						}
+						menu.isrunning=false;
+						break;
+					}
+
+					if (rt==1)
+					{
+						*pret_str=ch;
+						++pret_str;
+					}
+
+					if (rt==-1)
+					{
+						break;
+					}
+				}
+			}
+		}
 
 		if (nk_begin (ctx, "desk", nk_rect (0, 0,xwin.width,xwin.height),0))
 		{
@@ -443,9 +607,9 @@ int main (void)
 						}
 						else
 						{
-							menupos.isactive=true;
-							menupos.pos.x=* (&ctx->input.mouse.pos.x);
-							menupos.pos.y=* (&ctx->input.mouse.pos.y);
+							menu.spawn=true;
+							/*menu.pos.x=* (&ctx->input.mouse.pos.x);*/
+							/*menu.pos.y=* (&ctx->input.mouse.pos.y);*/
 						}
 					}
 
@@ -475,51 +639,6 @@ int main (void)
 		}
 
 		nk_end (ctx);
-
-		if (nk_input_is_mouse_hovering_rect (&ctx->input,nk_rect (menupos.pos.x,menupos.pos.y, 100, 180)))
-		{
-			if (menupos.isactive)
-			{
-				if (nk_begin (ctx, "menu", nk_rect (menupos.pos.x,menupos.pos.y, 100, 180),0))
-				{
-					nk_layout_row_dynamic (ctx,30,1);
-
-					if (nk_button_label (ctx,"delete"))
-					{
-						menupos.isactive=false;
-						int sif=0;
-
-						while (sif<fnum)
-						{
-							if (files[sif]->isselected==true)
-							{
-								remove (files[sif]->path);
-							}
-
-							files[sif]->isselected=false;
-							sif++;
-						}
-					}
-
-					nk_layout_row_dynamic (ctx,30,1);
-					nk_button_label (ctx,"rename");
-					nk_layout_row_dynamic (ctx,30,1);
-					nk_button_label (ctx,"move");
-					nk_layout_row_dynamic (ctx,30,1);
-					nk_button_label (ctx,"lunch");
-					nk_layout_row_dynamic (ctx,30,1);
-					nk_button_label (ctx,"open with");
-					nk_layout_row_dynamic (ctx,30,1);
-					nk_button_label (ctx,"details");
-					nk_end (ctx);
-				}
-			}
-		}
-		else
-		{
-			menupos.isactive=false;
-		}
-
 		XGetWindowAttributes (xwin.dpy, xwin.win, &xwin.attr);
 		glClear (GL_COLOR_BUFFER_BIT);
 		nk_x11_render (NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);

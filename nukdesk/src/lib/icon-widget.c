@@ -57,10 +57,10 @@ static int pos_is_in_rect(struct nk_vec2 v,struct nk_rect r)
         return 0;
     }
 }
-static void lunch(char * openbuff,struct fileinfo file)
+void launch(char * openbuff,struct fileinfo file)
 {
     char * programname;
-    char * lunchpath;
+    char * launchpath;
     programname = get_config(openbuff,file.magic.mime,file.magic.humanreadable,NULL);
     if(programname==NULL)
     {
@@ -70,14 +70,14 @@ static void lunch(char * openbuff,struct fileinfo file)
             die("%s\n","No programs found");
         }
     }
-    lunchpath = malloc(strlen(programname)+1+strlen(file.path)+2);
-    strcpy(lunchpath,programname);
-    strcat(lunchpath," ");
-    strcat(lunchpath,file.path);
-    puts(lunchpath);
+    launchpath = malloc(strlen(programname)+1+strlen(file.path)+2);
+    strcpy(launchpath,programname);
+    strcat(launchpath," ");
+    strcat(launchpath,file.path);
+    puts(launchpath);
     if(fork()==0)
     {
-        execl("/bin/sh","sh","-c",lunchpath,NULL);
+        execl("/bin/sh","sh","-c",launchpath,NULL);
     }
 }
 void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char * openbuff,struct nk_rect icrect)
@@ -97,7 +97,7 @@ void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char *
             nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,42));
             if(in->mouse.buttons[NK_BUTTON_LEFT].clicked)
             {
-                lunch(openbuff, *file);
+                launch(openbuff, *file);
             }
         }
         /*The shadow around the icon when cursor is on it*/

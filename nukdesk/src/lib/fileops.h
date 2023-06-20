@@ -33,11 +33,6 @@ struct dsk_dir
     char * d_path;
     struct kevent d_change;
 };
-struct menupos
-{
-    bool isactive;
-    struct nk_vec2 pos;
-};
 char * fileopentobuff (const char * path);
 struct fileinfo * new_file(char * d_path,char * name, char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr);
 void delete_file(struct fileinfo ** files, int fnum, int i);
