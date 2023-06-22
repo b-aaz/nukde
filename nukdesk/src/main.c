@@ -29,10 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FAILSAFEICONIDX "../examples/icon.nucfg"
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 
-#define ICON_W 150
-#define MINLFPAD 30
-#define MINRIPAD 30
-#define ICONHPAD 20
 
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
@@ -70,14 +66,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
 #define NUKMENU "../nukmenu/bin/nukmenu"
-#define MENUINPUT "remove\nopen\n\n"
-#define MENUINPUTLEN 14
+#define MENUINPUT "LBL:Menu\nremove\nopen\n\n"
+
+#define MENUINPUTLEN 22
 #define MAXMENUITEMLEN 3
+
+struct grid_config
+{
+	unsigned int icon_width ;
+	unsigned int min_l_pad ;
+	unsigned int min_r_pad ;
+	unsigned int icon_h_pad ;
+	unsigned int icon_v_pad ;
+	unsigned int icon_txt_pad ;
+	unsigned int row_pad ;
+};
+
 
 enum items
 {
 	REMOVE = 0,
 	OPEN = 1,
+	TOGGCFG = 2,
 };
 struct menu
 {
@@ -400,6 +410,20 @@ int main (void)
 	struct dirent * dir ;
 	char * iconidx;
 	char * openidx;
+	struct sortby st;
+	struct menu menu = {0};
+	struct fileinfo ** files;
+	size_t fi=0;
+	unsigned int fnum=0;
+	struct grid_config gcfg;
+	bool show_gridcfg_menu = false;
+	gcfg.icon_width = 40;
+	gcfg.min_l_pad = 30;
+	gcfg.min_r_pad = 30;
+	gcfg.icon_h_pad = 20;
+	gcfg.icon_v_pad = 20;
+	gcfg.icon_txt_pad = 20;
+	gcfg.row_pad = 10;
 	ctx=init_window (&xwin,&glContext);
 	addfont (NULL,0,0);
 	magic_t magic_cookie_mime=0;
@@ -421,7 +445,6 @@ int main (void)
 			EV_ADD | EV_ENABLE | EV_ONESHOT | EV_CLEAR,
 			NOTE_WRITE,
 			0, 0);
-	unsigned int fnum=0;
 	desktop_dir.d=opendir (desktop_dir.d_path);
 
 	if (desktop_dir.d)
@@ -439,14 +462,8 @@ int main (void)
 		die ("%s\n","No desktop folder");
 	}
 
-	struct fileinfo ** files;
-
 	printf ("%d\n",fnum);
-
 	files=malloc (fnum * sizeof (struct fileinfo *));
-
-	size_t fi=0;
-
 	rewinddir (desktop_dir.d);
 
 	while ( (dir=readdir (desktop_dir.d)) != NULL)
@@ -466,19 +483,11 @@ int main (void)
 		start_thrd_for_icon (files,i,i);
 	}
 
-	struct sortby st;
-
 	st.ac=1;
-
 	st.st=NAME;
-
 	sortfiles (files,fnum,st);
-
 	bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.94f, bg.a = 1.0f;
-
 	bgimage=load_image_open_resize (BGIMAGE, xwin.width,xwin.height);
-
-	struct menu menu = {0};
 
 	while (running)
 	{
@@ -516,6 +525,17 @@ int main (void)
 			spawnmenu (menu.fd,0,0,0, 10, 10, id);
 			fcntl (menu.fd[0],O_NONBLOCK);
 			write (menu.fd[1], MENUINPUT, MENUINPUTLEN) ;
+
+			if (show_gridcfg_menu)
+			{
+				write (menu.fd[1],"disable", 7) ;
+			}
+			else
+			{
+				write (menu.fd[1],"enable", 6) ;
+			}
+
+			write (menu.fd[1]," gird menu\n\n",10) ;
 			close (menu.fd[1]);
 			menu.spawn=false ;
 			menu.isrunning=true;
@@ -552,23 +572,35 @@ int main (void)
 											remove (files[sif]->path);
 										}
 
-										files[sif]->isselected=false;
 										sif++;
 									}
+
+									break;
 
 								case OPEN :
 									while (sif<fnum)
 									{
 										if (files[sif]->isselected==true)
 										{
-											launch(openidx,*files[sif]);
+											launch (openidx,*files[sif]);
 										}
 
-										files[sif]->isselected=false;
 										sif++;
 									}
+
+									break;
+
+								case TOGGCFG :
+									show_gridcfg_menu=!show_gridcfg_menu;
 							}
 						}
+
+						while (sif<fnum)
+						{
+							files[sif]->isselected=false;
+							sif++;
+						}
+
 						menu.isrunning=false;
 						break;
 					}
@@ -589,56 +621,62 @@ int main (void)
 
 		if (nk_begin (ctx, "desk", nk_rect (0, 0,xwin.width,xwin.height),0))
 		{
-			files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
 			struct nk_window * win;
+			unsigned int row=0;
+			unsigned int col;
+			unsigned int max_colomns;
+			float colomn_pad ;
+			unsigned int  icon_num;
+			struct nk_rect icon_rect ;
+			files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
 			win = ctx->current;
 			nk_draw_image (&win->buffer,nk_rect (0,0,xwin.width,xwin.height),&bgimage,nk_rgb (255,255,255));
-			int row=0;
-			unsigned int col=0;
-			unsigned int maximum_cols= (xwin.width- (MINLFPAD+MINRIPAD)) / (ICON_W+ICONHPAD);
-			float calpad = (float) ( (xwin.width- (MINLFPAD+MINRIPAD)) % (ICON_W+ICONHPAD)) /2;
-			nk_layout_space_begin (ctx, NK_STATIC, 70,maximum_cols);
+			max_colomns= (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) / (gcfg.icon_width+gcfg.icon_h_pad);
+			colomn_pad = (float) ( (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) % (gcfg.icon_width+gcfg.icon_h_pad)) /2;
 
-			while (row< (fnum/maximum_cols)+1)
+			while (row< (fnum/max_colomns)+1)
 			{
 				col=0;
 
-				while ( (col+ (row*maximum_cols)) <fnum&&col<maximum_cols)
+				while (col+ (row*max_colomns) <fnum && col<max_colomns)
 				{
-					int iconnum=col+ (row*maximum_cols);
-					struct nk_rect icrect = nk_rect ( (col* (ICONHPAD+ICON_W)+MINLFPAD+calpad), (row* (ICON_W+20+50))+10, ICON_W, ICON_W+20);
+					icon_num=col+ (row*max_colomns);
+					icon_rect = nk_rect ( (col* (gcfg.icon_h_pad+gcfg.icon_width)+gcfg.min_l_pad+colomn_pad),
+										  (row* (gcfg.icon_width+gcfg.icon_v_pad+gcfg.icon_txt_pad))+gcfg.row_pad,
+										  gcfg.icon_width,
+										  gcfg.icon_width+gcfg.icon_txt_pad);
 
-					if (files[iconnum]->icon_load_args.genid)
+					if (files[icon_num]->icon_load_args.genid)
 					{
-						loadicon (files[iconnum]);
+						loadicon (files[icon_num]);
 					};
 
-					draw_icon (ctx,files[iconnum]->name, (files[iconnum]),openidx,icrect);
+					draw_icon (ctx,files[icon_num]->name, (files[icon_num]),openidx,icon_rect);
 
-					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_RIGHT,icrect))
+					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_RIGHT,icon_rect))
 					{
 						if (nk_input_is_key_down ( (&ctx->input),NK_KEY_SHIFT))
 						{
-							files[iconnum]->isselected=!files[iconnum]->isselected;
+							files[icon_num]->isselected=!files[icon_num]->isselected;
 						}
 						else
 						{
+							files[icon_num]->isselected=true;
 							menu.spawn=true;
 							/*menu.pos.x=* (&ctx->input.mouse.pos.x);*/
 							/*menu.pos.y=* (&ctx->input.mouse.pos.y);*/
 						}
 					}
 
-					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_MIDDLE,icrect))
+					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_MIDDLE,icon_rect))
 					{
-						files[iconnum]->isselected=!files[iconnum]->isselected;
+						files[icon_num]->isselected=!files[icon_num]->isselected;
 					}
 
-					if (files[iconnum]->isselected)
+					if (files[icon_num]->isselected)
 					{
-						printf ("sel%d\n",col+ (row*maximum_cols));
-						nk_stroke_rect (&win->buffer,icrect,0,2,nk_rgba (250,250,250,32));
-						nk_fill_rect (&win->buffer,icrect,0,nk_rgba (0,0,255,32));
+						nk_stroke_rect (&win->buffer,icon_rect,0,2,nk_rgba (250,250,250,32));
+						nk_fill_rect (&win->buffer,icon_rect,0,nk_rgba (0,0,255,32));
 					}
 
 					col++;
@@ -651,6 +689,40 @@ int main (void)
 			{
 				lastpos.x=* (&ctx->input.mouse.pos.x);
 				lastpos.y=* (&ctx->input.mouse.pos.y);
+			}
+
+			if (show_gridcfg_menu)
+			{
+				nk_layout_space_begin (ctx,NK_STATIC,xwin.height,14);
+				nk_layout_space_push (ctx, nk_rect (0,xwin.height-120,90,30));
+				nk_text (ctx,"icon_width",10,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (90,xwin.height-120,xwin.width-90,30));
+				nk_slider_int (ctx,0,&gcfg.icon_width,100,1);
+				nk_layout_space_push (ctx, nk_rect (0,xwin.height-90,90,30));
+				nk_text (ctx,"min_r_pad",9,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (90,xwin.height-90,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.min_r_pad,100,1);
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-90,90,30));
+				nk_text (ctx,"icon_h_pad",10,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-90,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.icon_h_pad,100,1);
+				nk_layout_space_push (ctx, nk_rect (0,xwin.height-60,90,30));
+				nk_text (ctx,"icon_v_pad",10,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (90,xwin.height-60,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.icon_v_pad,100,1);
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-60,90,30));
+				nk_text (ctx,"icon_txt_pad",12,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-60,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.icon_txt_pad,100,1);
+				nk_layout_space_push (ctx, nk_rect (0,xwin.height-30,90,30));
+				nk_text (ctx,"row_pad",7,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (90,xwin.height-30,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.row_pad,100,1);
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-30,90,30));
+				nk_text (ctx,"min_l_pad",9,NK_TEXT_CENTERED) ;
+				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-30,xwin.width/2-90,30));
+				nk_slider_int (ctx,0,&gcfg.min_l_pad,100,1);
+				nk_layout_space_end (ctx);
 			}
 		}
 
