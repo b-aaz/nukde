@@ -1,5 +1,7 @@
-img:binary=/root/repo//examples/pics/fbsdball.ff
-img:application/octet-stream=/root/repo/examples/pics/fbsdtitle.ff
-,eie:exampleformat=/bin/example
+img:application/octet-stream=/root/repo/examples/icons/text.ff
 ,eie:farbfeld=/bin/cat
-eie:image/png=/root/repo/examples/execd-icon-exteions/png.sh
+eie:image/png=/root/repo/examples/execed-icon-extensions/png.sh
+img:text/x-c=/root/repo/examples/icons/text-x-c.ff
+img:text/x-script.python=/root/repo/examples/icons/mimetype-python.ff
+img:inode/x-empty=/root/repo/examples/icons/empty.ff
+img:text/x-lisp=/root/repo/examples/icons/applications-lisp.ff

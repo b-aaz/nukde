@@ -33,8 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "GL/gl.h"                /* for glDeleteTextures*/
 #include "fileinfo_type.h"        /* for fileinfo, thrd_icon_load_args, magi...*/
 
-#define FAILSAFEICON "../examples/pics/err.ff"
-#define BGIMAGE "../examples/pics/bg.ff"
+#define FAILSAFEICON "../examples/icons/err.ff"
 #define FAILSAFEICONIDX "../examples/icon.nucfg"
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 #include "stb_image_resize.h"

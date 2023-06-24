@@ -1,0 +1,15 @@
+LBL:Program to run?
+ls
+ps
+cat
+htop
+submenu for gui programs:
+,gimp
+,inkscape
+,blender
+,An even deeper submenu for terms:
+,,xterm
+,,st
+,,urxvt
+echo
+rm

@@ -97,6 +97,7 @@ void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char *
             nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,42));
             if(in->mouse.buttons[NK_BUTTON_LEFT].clicked)
             {
+#define BGIMAGE "../examples/pics/bg.ff"
                 launch(openbuff, *file);
             }
         }

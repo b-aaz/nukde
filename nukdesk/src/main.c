@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/dirent.h>                 /* for dirent*/
 #include <sys/event.h>                  /* for kqueue, EVFILT_VNODE, EV_ADD*/
 
-#define FAILSAFEICON "../examples/pics/err.ff"
-#define BGIMAGE "../examples/pics/bg.ff"
+#define FAILSAFEICON "../examples/icons/err.ff"
+#define BGIMAGE "../examples/icons/bg.ff"
 #define FAILSAFEICONIDX "../examples/icon.nucfg"
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 
@@ -417,7 +417,7 @@ int main (void)
 	unsigned int fnum=0;
 	struct grid_config gcfg;
 	bool show_gridcfg_menu = false;
-	gcfg.icon_width = 40;
+	gcfg.icon_width = 100;
 	gcfg.min_l_pad = 30;
 	gcfg.min_r_pad = 30;
 	gcfg.icon_h_pad = 20;
