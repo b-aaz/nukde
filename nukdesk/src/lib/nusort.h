@@ -17,6 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	#define NUSORT
 
 
-int strnucmp(short int *ac,const char * str1,const char * str2);
+int strnucmp(const char * str1,const char * str2);
 
 #endif 

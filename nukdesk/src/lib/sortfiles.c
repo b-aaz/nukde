@@ -65,11 +65,11 @@ static char filecmp (void * sort,const void * a, const void * b)
 	switch (sb.st)
 	{
 		case NAME:
-			return strnucmp (&sb.ac, file1->name, file2->name);
+			return sb.ac*strnucmp ( file1->name, file2->name);
 			break;
 
 		case TYPE:
-			return strnucmp (&sb.ac, file1->magic.humanreadable, file2->magic.humanreadable);
+			return sb.ac*strnucmp ( file1->magic.humanreadable, file2->magic.humanreadable);
 			break;
 
 		case SIZE:

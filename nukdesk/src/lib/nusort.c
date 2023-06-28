@@ -15,84 +15,147 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
 #include <ctype.h>
-int strnucmp(short int *ac,const char * str1,const char * str2)
+/* This function compares two strings in a natural user friendly
+ * fashion that is nicer for sorting files names in a file manager,
+ * desktop, sorting items for a menu and etc.
+
+ * Instead of just comparing each chars ASCII value from
+ * the two strings (like what strcmp() does) , this functions takes
+ * numbers that are in the strings into account too.
+
+ * For example consider the following strings:
+ * 12.png
+ * 1.png
+ * 100.png
+ * 2023.png
+ * 5.png
+
+ * If we sorted this strings with a sorting algorithm
+ * and provided strcmp as its comparison function the
+ * results would be similar to the flowing:
+ * 5.png
+ * 2023.png
+ * 12.png
+ * 100.png
+ * 1.png
+
+ * And that's counter intuitive.
+ * But instead if you provided strnucmp 
+ * 1.png
+ * 5.png
+ * 12.png
+ * 100.png
+ * 2023.png
+
+ * And That's a natural NUmerical comparison.
+ */
+#define TT  3
+#define TF  2
+#define FT  1
+#define FF  0
+int strnucmp (const char * str1,const char * str2)
 {
-	size_t numlength=0;
-	while(1)
+	register unsigned char cm; /* This char stores the result of two CoMparisons in its first two bits*/
+	size_t numlength=0; /* Stores the number of digits of a NUMber in both the strings */
+
+	while (1)
 	{
-out:
-		if(*str1=='\0' && !(*str2=='\0'))
+out: /* Label to get OUT of the inner loop */
+
+
+		cm = 0;
+		cm = *str1=='\0';
+		cm <<= 1;
+		cm |= *str2=='\0';
+
+		switch (cm)
 		{
-			return -*ac;
+			case TF :
+				return -1;
+
+			case FT :
+				return 1;
+
+			case TT :
+				return 0;
 		}
-		if(!(*str1=='\0') && *str2=='\0')
+
+		cm = 0;
+		cm =isdigit (*str1);
+		cm <<= 1;
+		cm |=isdigit (*str2);
+
+		switch (cm)
 		{
-			return *ac;
-		}
-		if(*str1=='\0' && *str2=='\0')
-		{
-			return 0;
-		}
-		if(isdigit(*str1)&&isdigit(*str2))
-		{
-			while(1)
-			{
-				if(isdigit(*str1)&& !isdigit(*str2))
+			case FF :
+				break;
+
+			case TF :
+				return -1;
+
+			case FT :
+				return 1;
+
+			case TT:
+				while (1)
 				{
-					return *ac;
-				}
-				if(!isdigit(*str1)&&isdigit(*str2))
-				{
-					return -*ac;
-				}
-				if(!isdigit(*str1)&&!isdigit(*str2))
-				{
-					str1-=numlength;
-					str2-=numlength;
-					while(1)
+					str1++;
+					str2++;
+					numlength++;
+
+					cm = 0;
+					cm =isdigit (*str1);
+					cm <<= 1;
+					cm |=isdigit (*str2);
+
+					switch (cm)
 					{
-						if(!isdigit(*str1)&&!isdigit(*str2))
-						{
-							numlength=0;
+						case TT :
+							break;
+
+						case FF :
+							str1-=numlength;
+							str2-=numlength;
+
+							while (numlength-->0)
+							{
+								if (*str1>*str2)
+								{
+									return 1;
+								}
+
+								if (*str1<*str2)
+								{
+									return -1;
+								}
+
+								str1 ++;
+								str2 ++;
+							}
+
 							goto out;
-						}
-						if(*str1>*str2)
-						{
-							return *ac;
-						}
-						if(*str1<*str2)
-						{
-							return -*ac;
-						}
-						str1 ++;
-						str2 ++;
+
+						case TF :
+							return 1;
+
+						case FT :
+							return -1;
 					}
 				}
-				str1++;
-				str2++;
-				numlength++;
-			}
 		}
-		else if(isdigit(*str1)&& !isdigit(*str2))
+
+		if (*str1>*str2)
 		{
-			return -*ac;
+			return 1;
 		}
-		else if(!isdigit(*str1)&&isdigit(*str2))
+
+		if (*str1<*str2)
 		{
-			return *ac;
+			return -1;
 		}
-		else
-		{
-			if(*str1>*str2)
-			{
-				return *ac;
-			}
-			if(*str1<*str2)
-			{
-				return -*ac;
-			}
-		}
+
 		str1++;
 		str2++;
 	}
 }
+
