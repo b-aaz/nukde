@@ -39,3 +39,12 @@ I've intended to write this program(s) to be a \*BSD specific and I have no moti
 + and MORE .....
 
 _[@] in the process , [X] done , [-] canceled_
+
+## Screenshots:
+
+
+
+https://github.com/b-aaz/nukde/assets/85005689/a8ba9375-88c7-4967-aaf2-cb65785994bb
+
+![NukDesk](https://github.com/b-aaz/nukde/assets/85005689/ba250d25-c6a5-460a-9557-6ce28df81a3a)
+
