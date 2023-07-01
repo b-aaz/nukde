@@ -49,8 +49,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "fileops.h"
 static struct charnode
 {
-    char * name;
-    struct charnode * next;
+	char * name;
+	struct charnode * next;
 };
 /*Reads path file into a char array */
 char * fileopentobuff (const char * path)
@@ -73,12 +73,12 @@ static void magic_line_split (const	char * data, char * lines[])
 {
 	size_t n=0;
 	size_t linelength=0;
-	puts(data);
+
 	while (data[linelength] != ';')
 	{
 		if (data[linelength]=='\0')
 		{
-			die("%s\n","Error splitting the magic line finding ';'");
+			die ("%s\n","Error splitting the magic line finding ';'");
 		}
 
 		linelength++;
@@ -93,7 +93,7 @@ static void magic_line_split (const	char * data, char * lines[])
 
 	if (data[n]!='=')
 	{
-			die("%s\n","Error splitting the magic line finding '='");
+		die ("%s\n","Error splitting the magic line finding '='");
 	}
 
 	n++;
@@ -189,16 +189,20 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 	char * shortcutfilebuffer;
 	char * lines[2];
 	file= malloc (sizeof (struct fileinfo));
-	file->icon_load_args.type=malloc (4+1);
 	file->icon_load_args.icon_size=ICON_W;
-	file->icon_load_args.genid=false;
+	file->icon_load_args.generateid=false;
+	file->icon_load_args.iconready=false;
 	file-> isselected=false;
-	puts ("||||||newfile down||||||||");
+#ifdef DEBUG
+	puts ("\\/<---New file--->\\/");
 	puts (name);
+#endif
 	file->name= malloc (strlen (name)+10);
 	strcpy (file->name,name);
 	file->name[strlen (name)]='\0';
-	printf ("name %s\n",file->name);
+#ifdef DEBUG
+	printf ("Name %s\n",file->name);
+#endif
 	file->path=malloc (strlen (d_path)+strlen (name)+2);
 	strcpy (file->path,d_path);
 	strcat (file->path,"/");
@@ -209,7 +213,6 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 			NOTE_DELETE | NOTE_EXTEND | NOTE_WRITE | NOTE_ATTRIB | NOTE_CLOSE | NOTE_CLOSE_WRITE|NOTE_LINK|NOTE_OPEN|NOTE_READ|NOTE_RENAME,
 			0, 0);
 	stat (file->path,&file->f_stat);
-	printf ("name: %s\n",file->name);
 
 	if (S_ISDIR (file->f_stat.st_mode))
 	{
@@ -220,19 +223,18 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 		file->f_size=file->f_stat.st_size;
 	}
 
-	file->magic.humanreadable=magic_file (magic_cookie_hr,file->path);
+	file->type.humanreadable=magic_file (magic_cookie_hr,file->path);
 	magic_line_split (magic_file (magic_cookie_mime,file->path),lines);
-	file->magic.mime=lines[0];
-	file->magic.encode=lines[1];
+	file->type.mime=lines[0];
+	file->type.encode=lines[1];
 	file->icon_load_args.icon_path=NULL;
 
-	if (strcmp (file->magic.mime,"text/x-shellscript") ==0)
+	if (strcmp (file->type.mime,"text/x-shellscript") ==0)
 	{
 		if (fileisashortcut (file->path))
 		{
 			shortcutfilebuffer=fileopentobuff (file->path);
-			strcpy (file->icon_load_args.type,"img:");
-			file->icon_load_args.type[4]='\0';
+			file->icon_load_args.icon_type=IMG;
 			file->icon_load_args.icon_path=get_config (shortcutfilebuffer,"#icon",NULL,NULL);
 			file->description=get_config (shortcutfilebuffer,"#description",NULL,NULL);
 		}
@@ -240,36 +242,31 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 
 	if (file->icon_load_args.icon_path == NULL)
 	{
-		file->icon_load_args.icon_path=get_config (iconidx,file->magic.mime,file->magic.humanreadable,file->icon_load_args.type);
+		file->icon_load_args.icon_path=get_config (iconidx,file->type.mime,file->type.humanreadable,&file->icon_load_args.icon_type);
 
 		if (file->icon_load_args.icon_path==NULL)
 		{
-			puts ("failsafeL0");
-			file->icon_load_args.icon_path=get_config (iconidx,file->magic.encode,NULL,file->icon_load_args.type);
+			file->icon_load_args.icon_path=get_config (iconidx,file->type.encode,NULL,&file->icon_load_args.icon_type);
 
 			if (file->icon_load_args.icon_path==NULL)
 			{
-				puts ("failsafeL1");
 				file->icon_load_args.icon_path=FAILSAFEICON;
-				strcpy (file->icon_load_args.type,"img:");
-				file->icon_load_args.type[4]='\0';
+				file->icon_load_args.icon_type=IMG;
 			}
 		}
 	}
 
-	printf ("icpath: %s , type: %s\n",file->icon_load_args.icon_path,file->icon_load_args.type);
 	return file;
 }
 /*Deletes a file from a fileinfo * array*/
 void delete_file (struct fileinfo ** files, int fnum, int i)
 {
-	if (strcmp (files[i]->icon_load_args.type,"eie:") ==0)
+	if (files[i]->icon_load_args.icon_type==EIE)
 	{
 		thrd_join (files[i]->icon_load_args.thrd,NULL);
 		free (files[i]->icon_load_args.icon_path);
-		free (files[i]->icon_load_args.type);
 
-		if (files[i]->icon_load_args.genid)
+		if (files[i]->icon_load_args.generateid)
 		{
 			free (files[i]->icon_load_args.return_data);
 		}
@@ -279,14 +276,12 @@ void delete_file (struct fileinfo ** files, int fnum, int i)
 		}
 	}
 
-	if (strcmp (files[i]->icon_load_args.type,"img:") ==0)
+	if (files[i]->icon_load_args.icon_type==IMG)
 	{
 		bool iconisuniqe = true;
 
 		for (unsigned int i2 = 0; i2<fnum; i2++)
 		{
-			printf ("%ud\n",i2);
-
 			if (strcmp (files[i2]->icon_load_args.icon_path,files[i]->icon_load_args.icon_path) ==0&& i != i2)
 			{
 				iconisuniqe=false;
@@ -298,9 +293,8 @@ void delete_file (struct fileinfo ** files, int fnum, int i)
 		{
 			thrd_join (files[i]->icon_load_args.thrd,NULL);
 			free (files[i]->icon_load_args.icon_path);
-			free (files[i]->icon_load_args.type);
 
-			if (files[i]->icon_load_args.genid)
+			if (files[i]->icon_load_args.generateid)
 			{
 			}
 			else
@@ -310,17 +304,19 @@ void delete_file (struct fileinfo ** files, int fnum, int i)
 		}
 	}
 
+#ifdef DEBUG
 	printf (" File deleted %s\n",files[i]->name);
+#endif
 	free (files[i]->path);
-	free (files[i]->magic.mime);
-	free (files[i]->magic.encode);
+	free (files[i]->type.mime);
+	free (files[i]->type.encode);
 	free (files[i]->name);
 	free (files[i]);
 	files[i]=NULL;
-	puts ("deled");
 }
-/*Updates a fileinfo * array 
- *This function is getting real big....  */
+/*Updates a fileinfo * array
+ * TODO:Clean up the update mechanism.
+ *This function is getting really big....  */
 struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,int kqueue,struct fileinfo ** files,char * iconidx,magic_t magic_cookie_mime,magic_t magic_cookie_hr)
 {
 	struct timespec t;
@@ -337,13 +333,11 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 	}
 	changelist[*fnum]=desktop_dir.d_change;*/
 	int nev;
-	/*struct kevent eventd;*/
 	nev = kevent (kqueue, &desktop_dir.d_change, 1,eventlist, 1, &t);
 
 	/*evevent iterator*/
 	for (int ei=0; ei<nev; ei++)
 	{
-		printf ("ei %d\n",ei);
 		/*event file iterator*/
 		int efi=0;
 
@@ -367,7 +361,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 		if (eventlist[ei].fflags & NOTE_WRITE)
 		{
-			puts ("heay");
+			printf ("File written to %s\n",files[efi]->name);
 
 			if (eventlist[ei].ident==desktop_dir.d_open)
 			{
@@ -382,7 +376,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 		if (eventlist[ei].fflags & NOTE_CLOSE_WRITE)
 		{
-			printf ("File closed and writed %s\n",files[efi]->name);
+			printf ("File closed and written to %s\n",files[efi]->name);
 		}
 
 		if (eventlist[ei].fflags & NOTE_LINK)
@@ -411,16 +405,12 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 		}
 
 		deledfiles=0;
-
 		struct dirent * dir;
 
-		/*int newfilenum=0;*/
 		if (updir)
 		{
-			/*	sleep(1);*/
 			int oldfnum= *fnum;
 			*fnum = 0;
-			puts ("dir writento\n");
 			rewinddir (desktop_dir.d);
 
 			if (desktop_dir.d)
@@ -430,18 +420,14 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 					files[i]->deletded=true;
 				}
 
-				printf ("old : %d\n",oldfnum);
-
 				while ( (dir=readdir (desktop_dir.d)) != NULL)
 				{
 					if (! (!strcmp (".",dir->d_name) ||!strcmp ("..",dir->d_name)))
 					{
 						(*fnum)++;
-						printf ("fnumi: %d\n",*fnum);
 					}
 				}
 
-				printf ("fnum: %d\n",*fnum);
 				rewinddir (desktop_dir.d);
 				struct charnode * new_files_names=NULL;
 
@@ -453,12 +439,9 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 						for (int i =0; i< (oldfnum-deledfiles); i++)
 						{
-							printf ("i: %d dn: %s fn: %s\n",i,dir->d_name,files[i]->name);
-
 							if (strcmp (dir->d_name,files[i]->name) ==0)
 							{
 								files[i]->deletded=false;
-								puts ("file is not new");
 								isnew=false;
 								break;
 							}
@@ -466,12 +449,10 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 						if (isnew==true)
 						{
-							puts ("file is new adding to list");
 							struct charnode * current;
 
 							if (new_files_names==NULL)
 							{
-								puts ("empty lsit");
 								new_files_names=malloc (sizeof (struct charnode));
 								current=new_files_names;
 								current->next=NULL;
@@ -494,8 +475,6 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 								strcpy (current->next->name,dir->d_name);
 								current->next->name[strlen (dir->d_name)]='\0';
 							}
-
-							/*					newfilenum++;*/
 						}
 					}
 				}
@@ -523,10 +502,8 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 					}
 				}
 
-				/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,filecmp);*/
 				if (*fnum!=oldfnum)
 				{
-					printf ("realloced from %d to %d\n", oldfnum,*fnum);
 					files=realloc (files, (*fnum) * sizeof (struct  fileinfo *));
 				}
 
@@ -535,7 +512,6 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 					for (long int i=oldfnum-deledfiles; i<*fnum ; i++)
 					{
 						struct charnode * current;
-						printf ("adding newfile to %d fnum : %d\n", i,*fnum);
 						current = new_files_names;
 						files[i]=new_file (desktop_dir.d_path,current->name,iconidx,magic_cookie_mime,magic_cookie_hr);
 						start_thrd_for_icon (files,i,i);
@@ -547,14 +523,11 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 			}
 			else
 			{
-				puts ("no desktop folder");
+				die ("%s\n","No desktop folder");
 			}
 
-			printf ("fnum: %d\n",*fnum);
 			rewinddir (desktop_dir.d);
 		}
-
-		/*qsort_r(files, *fnum, sizeof(struct fileinfo *),&st,filecmp);*/
 	}
 
 	return files;

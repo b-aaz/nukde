@@ -16,6 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CONFIG_PARSER
 	#define CONFIG_PARSER
 
-char * get_config(char * data, char * pattern,char * bigpattern,char * type);
+char * get_config(char * data, char * pattern,char * bigpattern,enum icon_type * type);
 
 #endif 

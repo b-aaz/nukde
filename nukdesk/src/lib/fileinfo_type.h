@@ -22,17 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
      #include <sys/stat.h>
 #include <threads.h>
 
-struct magicline
+struct type
 {
     char * humanreadable;
     char * mime;
     char * encode;
 };
+enum icon_type {
+IMG,
+EIE,
+};
 struct thrd_icon_load_args
 {
-    bool genid;
+    bool generateid;
+    bool iconready;
     thrd_t thrd;
-    char * type;
+    enum icon_type icon_type;
     char * icon_path;
     long int icon_size;
     unsigned char * return_data;
@@ -40,19 +45,19 @@ struct thrd_icon_load_args
 
 struct fileinfo
 {
+    char * name;
+    char * description;
+    char * path;
+    struct type type;
+    struct stat f_stat;
+    long long unsigned int f_size;
+    struct nk_image * return_image;
+    struct thrd_icon_load_args icon_load_args;
     bool deletded;
     bool isselected;
     struct kevent f_change;
     struct kevent f_event;
     int fd;
-    char * name;
-    char * description;
-    char * path;
-    struct nk_image * return_image;
-    long long unsigned int f_size;
-    struct stat f_stat;
-    struct thrd_icon_load_args icon_load_args;
-    struct magicline magic;
 };
 
 #endif 

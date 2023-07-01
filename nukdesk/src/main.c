@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dirent.h>                     /* for readdir, opendir, rewinddir*/
 #include <fcntl.h>                      /* for open, O_RDONLY*/
 #include <magic.h>                      /* for magic_error, magic_load, magi...*/
-#include <stdio.h>                      /* for fprintf, printf, NULL, puts*/
+#ifdef DEBUG
+	#include <stdio.h>                      /* for fprintf, printf, NULL, puts*/
+#endif
 #include <stdlib.h>                     /* for getenv, qsort_r, malloc*/
 #include <string.h>                     /* for strcmp, strlen, memset, strcat*/
 #include <sys/dirent.h>                 /* for dirent*/
@@ -304,8 +306,12 @@ void createglctx (struct XWindow * xwin, GLXContext * glContext)
 
 	if (!has_extension (extensions_str, "GLX_ARB_create_context") || !create_context)
 	{
+#ifdef DEBUG
 		fprintf (stderr, "[X11]: glXCreateContextAttribARB() not found...\n");
+#endif
+#ifdef DEBUG
 		fprintf (stderr, "[X11]: ... using old-style GLX context\n");
+#endif
 		*glContext = glXCreateNewContext (xwin->dpy, xwin->fbc, GLX_RGBA_TYPE, 0, True);
 	}
 	else
@@ -324,8 +330,12 @@ void createglctx (struct XWindow * xwin, GLXContext * glContext)
 			attr[1] = 1;
 			attr[3] = 0;
 			gl_err = nk_false;
+#ifdef DEBUG
 			fprintf (stdout, "[X11] Failed to create OpenGL 3.0 context\n");
+#endif
+#ifdef DEBUG
 			fprintf (stdout, "[X11] ... using old-style GLX context!\n");
+#endif
 			*glContext = create_context (xwin->dpy, xwin->fbc, 0, True, attr);
 		}
 	}
@@ -431,7 +441,9 @@ int main (void)
 	kqid=kqueue();
 	magic_cookie_mime = magic_open (MAGIC_MIME|MAGIC_PRESERVE_ATIME|MAGIC_SYMLINK|MAGIC_MIME_TYPE);
 	magic_cookie_hr = magic_open (MAGIC_NONE);
+#ifdef DEBUG
 	puts ("Loading magic databases\n");
+#endif
 	magic_load (magic_cookie_mime,NULL);
 	magic_load (magic_cookie_hr,NULL);
 	iconidx=fileopentobuff (FAILSAFEICONIDX);
@@ -462,7 +474,9 @@ int main (void)
 		die ("%s\n","No desktop folder");
 	}
 
+#ifdef DEBUG
 	printf ("%d\n",fnum);
+#endif
 	files=malloc (fnum * sizeof (struct fileinfo *));
 	rewinddir (desktop_dir.d);
 
@@ -475,11 +489,12 @@ int main (void)
 		}
 	}
 
+#ifdef DEBUG
 	puts ("Loading icons");
+#endif
 
 	for (unsigned int i = 0; i<fnum ; i++)
 	{
-		printf ("fis %d\n",i) ;
 		start_thrd_for_icon (files,i,i);
 	}
 
@@ -559,7 +574,9 @@ int main (void)
 						if (pret_str>ret_str)
 						{
 							*pret_str='\0';
+#ifdef DEBUG
 							puts (ret_str) ;
+#endif
 							menu.selected=strtouint (ret_str,NULL,10);
 
 							switch (menu.selected)
@@ -646,9 +663,9 @@ int main (void)
 										  gcfg.icon_width,
 										  gcfg.icon_width+gcfg.icon_txt_pad);
 
-					if (files[icon_num]->icon_load_args.genid)
+					if (files[icon_num]->icon_load_args.generateid)
 					{
-						loadicon (files[icon_num]);
+						generateid (files[icon_num]);
 					};
 
 					draw_icon (ctx,files[icon_num]->name, (files[icon_num]),openidx,icon_rect);

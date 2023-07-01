@@ -69,7 +69,7 @@ static char filecmp (void * sort,const void * a, const void * b)
 			break;
 
 		case TYPE:
-			return sb.ac*strnucmp ( file1->magic.humanreadable, file2->magic.humanreadable);
+			return sb.ac*strnucmp ( file1->type.humanreadable, file2->type.humanreadable);
 			break;
 
 		case SIZE:

@@ -6,7 +6,7 @@ LIBS=$(SRC)lib/
 BIN=nukdesk
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
-CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
+CFLAGS=$(OP) -Wall  -g -L/usr/local/lib  -I/usr/local/include 
 OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o $(BINDIR)ffload.o $(BINDIR)fileops.o $(BINDIR)config-parser.o $(BINDIR)icon-widget.o $(BINDIR)icon-loader.o $(BINDIR)sortfiles.o
 COOBFILES=$(COBINDIR)spawn.o
 

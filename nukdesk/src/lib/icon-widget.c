@@ -61,7 +61,7 @@ void launch(char * openbuff,struct fileinfo file)
 {
     char * programname;
     char * launchpath;
-    programname = get_config(openbuff,file.magic.mime,file.magic.humanreadable,NULL);
+    programname = get_config(openbuff,file.type.mime,file.type.humanreadable,NULL);
     if(programname==NULL)
     {
         programname = get_config(openbuff,"default",NULL,NULL);
@@ -97,7 +97,6 @@ void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char *
             nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,42));
             if(in->mouse.buttons[NK_BUTTON_LEFT].clicked)
             {
-#define BGIMAGE "../examples/pics/bg.ff"
                 launch(openbuff, *file);
             }
         }
@@ -106,5 +105,8 @@ void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char *
         nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,32));
     }
     nk_widget_text(&win->buffer,icrect,name,nk_strlen(name),&text,NK_TEXT_ALIGN_CENTERED|NK_TEXT_ALIGN_BOTTOM,ctx->style.font);
+    if (file->icon_load_args.iconready)
+    {
     nk_draw_image(&win->buffer,nk_rect(icrect.x,icrect.y,icrect.w,icrect.w),file->return_image,nk_rgb(255,255,255));
+    }
 }
