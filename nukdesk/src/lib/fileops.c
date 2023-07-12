@@ -47,10 +47,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
-static struct charnode
+#define DEBUG
+static struct strnode
 {
 	char * name;
-	struct charnode * next;
+	struct strnode * next;
 };
 /*Reads path file into a char array */
 char * fileopentobuff (const char * path)
@@ -191,7 +192,6 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 	file= malloc (sizeof (struct fileinfo));
 	file->icon_load_args.icon_size=ICON_W;
 	file->icon_load_args.generateid=false;
-	file->icon_load_args.iconready=false;
 	file-> isselected=false;
 #ifdef DEBUG
 	puts ("\\/<---New file--->\\/");
@@ -278,26 +278,16 @@ void delete_file (struct fileinfo ** files, int fnum, int i)
 
 	if (files[i]->icon_load_args.icon_type==IMG)
 	{
-		bool iconisuniqe = true;
-
-		for (unsigned int i2 = 0; i2<fnum; i2++)
+		if (files[i]->ic_copy_count)
 		{
-			if (strcmp (files[i2]->icon_load_args.icon_path,files[i]->icon_load_args.icon_path) ==0&& i != i2)
-			{
-				iconisuniqe=false;
-				break;
-			}
+			--*files[i]->ic_copy_count;
 		}
-
-		if (iconisuniqe)
+		else
 		{
 			thrd_join (files[i]->icon_load_args.thrd,NULL);
 			free (files[i]->icon_load_args.icon_path);
 
-			if (files[i]->icon_load_args.generateid)
-			{
-			}
-			else
+			if (!files[i]->icon_load_args.generateid)
 			{
 				glDeleteTextures (1,&files[i]->return_image->handle.id);
 			}
@@ -361,8 +351,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 		if (eventlist[ei].fflags & NOTE_WRITE)
 		{
-			printf ("File written to %s\n",files[efi]->name);
-
+			/*printf ("File written to %s\n",files[efi]->name);*/
 			if (eventlist[ei].ident==desktop_dir.d_open)
 			{
 				updir=true;
@@ -429,7 +418,8 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 				}
 
 				rewinddir (desktop_dir.d);
-				struct charnode * new_files_names=NULL;
+				struct strnode * new_files_names=NULL;
+				struct strnode * tail=NULL;
 
 				while ( (dir=readdir (desktop_dir.d)) != NULL)
 				{
@@ -449,31 +439,22 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 						if (isnew==true)
 						{
-							struct charnode * current;
+							struct strnode * current;
+							current=malloc (sizeof (struct strnode));
+							current->next=NULL;
+							current->name=malloc (strlen (dir->d_name)+1);
+							strcpy (current->name,dir->d_name);
+							current->name[strlen (dir->d_name)]='\0';
 
-							if (new_files_names==NULL)
+							if (new_files_names)
 							{
-								new_files_names=malloc (sizeof (struct charnode));
-								current=new_files_names;
-								current->next=NULL;
-								current->name=malloc (strlen (dir->d_name)+1);
-								strcpy (current->name,dir->d_name);
-								current->name[strlen (dir->d_name)]='\0';
+								tail->next = current ;
+								tail=current ;
 							}
 							else
 							{
-								current=new_files_names;
-
-								while (current->next!=NULL)
-								{
-									current=current->next;
-								}
-
-								current->next=malloc (sizeof (struct charnode));
-								current->next->next=NULL;
-								current->next->name=malloc (strlen (dir->d_name)+1);
-								strcpy (current->next->name,dir->d_name);
-								current->next->name[strlen (dir->d_name)]='\0';
+								tail = current ;
+								new_files_names = current ;
 							}
 						}
 					}
@@ -511,7 +492,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 				{
 					for (long int i=oldfnum-deledfiles; i<*fnum ; i++)
 					{
-						struct charnode * current;
+						struct strnode * current;
 						current = new_files_names;
 						files[i]=new_file (desktop_dir.d_path,current->name,iconidx,magic_cookie_mime,magic_cookie_hr);
 						start_thrd_for_icon (files,i,i);
@@ -532,4 +513,3 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 
 	return files;
 }
-

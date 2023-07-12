@@ -14,50 +14,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef FILEINFO_TYPE
-	#define FILEINFO_TYPE
+#define FILEINFO_TYPE
 
 
 #include <sys/event.h>
 #include "../../../colibs/bool.h"
-     #include <sys/stat.h>
+#include <sys/stat.h>
 #include <threads.h>
 
 struct type
 {
-    char * humanreadable;
-    char * mime;
-    char * encode;
+	char * humanreadable;
+	char * mime;
+	char * encode;
 };
-enum icon_type {
-IMG,
-EIE,
+enum icon_type
+{
+	IMG,
+	EIE,
 };
 struct thrd_icon_load_args
 {
-    bool generateid;
-    bool iconready;
-    thrd_t thrd;
-    enum icon_type icon_type;
-    char * icon_path;
-    long int icon_size;
-    unsigned char * return_data;
+	bool generateid;
+	thrd_t thrd;
+	enum icon_type icon_type;
+	char * icon_path;
+	long int icon_size;
+	unsigned char * return_data;
 } ;
 
 struct fileinfo
 {
-    char * name;
-    char * description;
-    char * path;
-    struct type type;
-    struct stat f_stat;
-    long long unsigned int f_size;
-    struct nk_image * return_image;
-    struct thrd_icon_load_args icon_load_args;
-    bool deletded;
-    bool isselected;
-    struct kevent f_change;
-    struct kevent f_event;
-    int fd;
+	char * name;
+	char * description;
+	char * path;
+	struct type type;
+	struct stat f_stat;
+	long long unsigned int f_size;
+	struct nk_image * return_image;
+	unsigned int * ic_copy_count;
+	struct thrd_icon_load_args icon_load_args;
+	bool deletded;
+	bool isselected;
+	struct kevent f_change;
+	struct kevent f_event;
+	int fd;
 };
 
-#endif 
+#endif

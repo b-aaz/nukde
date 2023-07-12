@@ -105,7 +105,7 @@ void draw_icon(struct nk_context * ctx,char * name,struct fileinfo * file,char *
         nk_fill_rect(&win->buffer,icrect,0,nk_rgba(0,0,0,32));
     }
     nk_widget_text(&win->buffer,icrect,name,nk_strlen(name),&text,NK_TEXT_ALIGN_CENTERED|NK_TEXT_ALIGN_BOTTOM,ctx->style.font);
-    if (file->icon_load_args.iconready)
+		if (file->return_image->handle.id)
     {
     nk_draw_image(&win->buffer,nk_rect(icrect.x,icrect.y,icrect.w,icrect.w),file->return_image,nk_rgb(255,255,255));
     }

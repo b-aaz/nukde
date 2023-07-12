@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <GLES3/gl3.h>                /* for glTexParameterf, GL_TEXTURE_2D*/
 #ifdef DEBUG
-#include <stdio.h>                    /* for printf, puts, FILE, pclose, popen*/
+	#include <stdio.h>                    /* for printf, puts, FILE, pclose, popen*/
 #endif
 #include <stdlib.h>                   /* for free, malloc, NULL*/
 #include <string.h>                   /* for strcat, strlen, strcmp, strcmp*/
@@ -171,8 +171,9 @@ void start_thrd_for_icon (struct fileinfo ** files,int fnum,int i)
 				puts ("COPY");
 				printf ("Coping icon from a file with iterator of %d, the name of %s and icon path of %s : %s for use at the file with the iterator of %d and name of  %s and icon path of %s : %d \n",i2,files[i2]->name,files[i2]->icon_load_args.icon_path,files[i2]->icon_load_args.icon_type,           i,files[i]->name,files[i]->icon_load_args.icon_path,files[i]->icon_load_args.icon_type);
 #endif
+				++*files[i2]->ic_copy_count;
 				(files[i]->return_image) = (files[i2]->return_image);
-				files[i]->icon_load_args.iconready=true;
+				(files[i]->ic_copy_count) = (files[i2]->ic_copy_count);
 				break;
 			}
 		}
@@ -183,7 +184,8 @@ void start_thrd_for_icon (struct fileinfo ** files,int fnum,int i)
 			puts ("IMG thread :");
 			printf ("%s\n",files[i]->name);
 #endif
-			files[i]->return_image= malloc (sizeof (struct nk_image));
+			files[i]->return_image= calloc (1,sizeof (struct nk_image));
+			files[i]->ic_copy_count= calloc (1,sizeof (unsigned int));
 
 			if (thrd_create (& (files[i]->icon_load_args.thrd), (thrd_start_t) thrd_icon_load,& (files[i]->icon_load_args)) ==thrd_error)
 			{
@@ -197,7 +199,8 @@ void start_thrd_for_icon (struct fileinfo ** files,int fnum,int i)
 #ifdef DEBUG
 		puts ("EIE:");
 #endif
-		files[i]->return_image=malloc (sizeof (struct nk_image));
+		files[i]->return_image= calloc (1,sizeof (struct nk_image));
+		files[i]->ic_copy_count= NULL ;
 
 		if (thrd_create (& (files[i]->icon_load_args.thrd), (thrd_start_t) thrd_icon_load_from_extion, (files[i])) ==thrd_error)
 		{
@@ -225,7 +228,6 @@ void generateid (struct fileinfo * file)
 	free (file->icon_load_args.return_data);
 	* (file->return_image) =nk_image_id ( (int) tex);
 	file->icon_load_args.generateid=false;
-	file->icon_load_args.iconready=true;
 #ifdef DEBUG
 	printf ("Generating image for : %s is done\n",file->name);
 #endif
