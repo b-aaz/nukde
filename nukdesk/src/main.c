@@ -68,10 +68,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
 #define NUKMENU "../nukmenu/bin/nukmenu"
-#define MENUINPUT "LBL:Menu\nremove\nopen\n\n"
+#define MENUINPUT "LBL:Menu\nremove\nopen\nsort by\n,name\n,size\n,type\n,modification date\n,creation date\n,access date\n"
 
-#define MENUINPUTLEN 22
-#define MAXMENUITEMLEN 3
+#define MENUINPUTLEN 94
+#define MAXMENUITEMLEN 4
 
 struct grid_config
 {
@@ -88,8 +88,15 @@ struct grid_config
 enum items
 {
 	REMOVE = 0,
-	OPEN = 1,
-	TOGGCFG = 2,
+	OPEN = 1 ,
+	ST_NAME = 3 ,
+	ST_SIZE = 4 ,
+	ST_TYPE = 5 ,
+	ST_MODIFICATION_DATE = 6 ,
+	ST_CREATION_DATE = 7 ,
+	ST_ACCESS_DATE = 8 ,
+	TOGGAC = 9,
+	TOGGCFG = 10,
 };
 struct menu
 {
@@ -404,6 +411,7 @@ struct nk_context * init_window (struct XWindow * xwin, GLXContext ** glContext)
 	return ctx;
 }
 
+	struct sortby sb;
 int main (void)
 {
 	struct XWindow xwin;
@@ -420,7 +428,6 @@ int main (void)
 	struct dirent * dir ;
 	char * iconidx;
 	char * openidx;
-	struct sortby st;
 	struct menu menu = {0};
 	struct fileinfo ** files;
 	size_t fi=0;
@@ -498,9 +505,9 @@ int main (void)
 		start_thrd_for_icon (files,i,i);
 	}
 
-	st.ac=1;
-	st.st=NAME;
-	sortfiles (files,fnum,st);
+	sb.ac=1;
+	sb.st=NAME;
+	sortfiles (files,fnum,sb);
 	bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.94f, bg.a = 1.0f;
 	bgimage=load_image_open_resize (BGIMAGE, xwin.width,xwin.height);
 
@@ -541,6 +548,14 @@ int main (void)
 			fcntl (menu.fd[0],O_NONBLOCK);
 			write (menu.fd[1], MENUINPUT, MENUINPUTLEN) ;
 
+			if (sb.ac>0) {
+			write (menu.fd[1],",ascending\n", 11) ;
+
+			}
+			else {
+			write (menu.fd[1],",descending\n", 12) ;
+				 
+			}
 			if (show_gridcfg_menu)
 			{
 				write (menu.fd[1],"disable", 7) ;
@@ -609,6 +624,15 @@ int main (void)
 
 								case TOGGCFG :
 									show_gridcfg_menu=!show_gridcfg_menu;
+									break;
+								case TOGGAC :
+									sb.ac=-sb.ac;
+									sortfiles (files,fnum,sb);
+									break;
+								default : 
+									sb.st=menu.selected - 3 ; 
+									sortfiles (files,fnum,sb);
+
 							}
 						}
 

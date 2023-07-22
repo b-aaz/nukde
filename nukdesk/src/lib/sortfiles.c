@@ -38,38 +38,22 @@ static char intcmp (int ac,long long int a, long long int b)
 	}
 }
 
-static char filecmp (void * sort,const void * a, const void * b)
+static char filecmp (const void * a, const void * b)
 {
 	struct fileinfo * file1;
 	struct fileinfo * file2;
-	struct sortby sb;
-	sb = * (struct sortby *) sort ;
+	extern struct sortby sb;
 	file1=* (struct fileinfo **) a;
 	file2= * (struct fileinfo **) b;
-
-	if (file1!=NULL && file2==NULL)
-	{
-		return -1;
-	}
-
-	if (file1==NULL && file2!=NULL)
-	{
-		return 1;
-	}
-
-	if (file1==NULL && file2==NULL)
-	{
-		return 0;
-	}
 
 	switch (sb.st)
 	{
 		case NAME:
-			return sb.ac*strnucmp ( file1->name, file2->name);
+			return sb.ac*strnucmp (file1->name, file2->name);
 			break;
 
 		case TYPE:
-			return sb.ac*strnucmp ( file1->type.humanreadable, file2->type.humanreadable);
+			return sb.ac*strnucmp (file1->type.humanreadable, file2->type.humanreadable);
 			break;
 
 		case SIZE:
@@ -92,9 +76,9 @@ static char filecmp (void * sort,const void * a, const void * b)
 			break;
 	}
 }
-void sortfiles (struct fileinfo ** files, size_t * fnum , struct sortby st) {
-
-			qsort_r(files, fnum, sizeof(struct fileinfo *),&st,filecmp);
+void sortfiles (struct fileinfo ** files, size_t  fnum, struct sortby st)
+{
+mergesort (files,fnum, sizeof (struct fileinfo *),filecmp);
 }
 
 

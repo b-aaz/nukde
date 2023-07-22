@@ -19,18 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum sorttype
 {
-    NAME=1,
-    SIZE=2,
-    TYPE=3,
-    MTIME=4,
-    CTIME=5,
-    ATIME=6
+    NAME=0,
+    SIZE=1,
+    TYPE=2,
+    MTIME=3,
+    CTIME=4,
+    ATIME=5
 };
 struct sortby
 {
     short int ac;
     enum sorttype st;
 };
-void sortfiles (struct fileinfo ** files, size_t * fnum , struct sortby st); 
+void sortfiles (struct fileinfo ** files, size_t  fnum , struct sortby st); 
 
 #endif 

@@ -471,12 +471,12 @@ struct args parse_args (int argc, char ** argv)
 
 	return args;
 }
-pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
+pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
 	char * args [14];
 	pid_t cpid;
-	args[0] = "./bin/nukmenu";
+	args[0] = path ;
 	args[1] = "-dp";
 	args[3] = "-x";
 	args[5] = "-y";
@@ -519,12 +519,12 @@ pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsi
 
 	return cpid;
 }
-int launchsubmenu (char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct id id)
+int launchsubmenu (char * path,char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct id id)
 {
 	int  fd [2];
 	char ch;
 	int stat;
-	spawnmenu (fd,depth,x,y,hp,vp,id) ;
+	spawnmenu (path,fd,depth,x,y,hp,vp,id) ;
 	write (fd[1],submenutext,  submenutextl) ;
 	close (fd[1]) ;
 	wait (&stat) ;
@@ -540,7 +540,6 @@ void getcursorpos (Display * dpy, Window root, int * x,int * y)
 	 * this function will stay here to be a
 	 * monument for the stupidity of some "programmers"
 	 * 5 use less variables just to get a simple cursor position
-	 * I think I'm going mad
 	 */
 	Window   useless_variable_cause_xlib_sucks1;
 	Window  useless_variable_cause_xlib_sucks2;
@@ -713,7 +712,7 @@ int main (int argc, char * * argv)
 							ignoreleave=true;
 							args.id.num=++current->id;
 
-							if (WEXITSTATUS (launchsubmenu (current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
+							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
 							{
 								exit (EXIT_SUCCESS);
 							}
