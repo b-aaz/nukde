@@ -13,4 +13,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-int auth(char enterdpass[],char  passfileloction[]);
+
+#ifndef AUTH
+	#define AUTH
+
+enum auth_return
+{
+	FAIL = 0,	/* Authentication failed . 		*/
+	SUCCESSES = 1,	/* Authentication was successful .	*/
+	NOPASS = 2 ,	/* Account does not have a password .	*/
+	LOCKED = -1 ,	/* Account is temporarily locked .	*/
+	NOLOGIN = -2 ,	/* Account does not allow logins .	*/
+
+};
+
+enum auth_return auth (char * enterdpasswd,char * passwd_fileloction);
+#endif 
