@@ -13,7 +13,7 @@ COOBFILES=
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	$(MAKEDIR)
 	cc $(OBFILES) $(COOBFILES)  $(CFLAGS) -o $@ -lX11 -lm -lcrypt 
-$(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h 
+$(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h $(COLIBS)bool.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)auth.c $(LIBCFLAGS) $(CFLAGS) -o $@ 
 $(BINDIR)strrmadd.o: $(LIBS)strrmadd.c 
