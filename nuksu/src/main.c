@@ -13,31 +13,31 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <math.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/timespec.h>
-#include "./lib/auth.h"
-#include <X11/cursorfont.h>
+#include <X11/cursorfont.h>             // for XC_xterm
+#include <stdio.h>                      // for fclose, snprintf, fprintf
+#include <stdlib.h>                     // for NULL, free, malloc
+#include <string.h>                     // for memset
+#include <sys/time.h>                   // for gettimeofday, timeval
+#include <sys/unistd.h>                 // for F_OK
+#include <time.h>                       // for nanosleep, time, time_t, time...
+#include <unistd.h>                     // for access, execvp, NULL
+
+#include "./lib/auth.h"                 // for auth
+#include "/root/repo/colibs/bool.h"     // for true, bool, false
+#include "/root/repo/colibs/nuklear.h"  // for nk_rgb, nk_layout_row_dynamic
+
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_XLIB_IMPLEMENTATION
-#define NK_ASSERT 
-#define INCLUDE_STYLE 
+#define NK_ASSERT
+#define INCLUDE_STYLE
 /*#define NK_INPUT_MAX 2 */
 #include "../../colibs/nuklear.h"
-#include "../../colibs/bool.h"
-#include "../../colibs/nuklear_xlib.h"
-#include "./lib/widgets.h"
+#include "../../colibs/nuklear_xlib.h"  // for XWindow, nk_xfont_create, nk_...
+#include "./lib/widgets.h"              // for passwords_input_style, password
+
 #define DTIME          20
 #define WINDOW_WIDTH    200
 #define WINDOW_HEIGHT   110
@@ -49,12 +49,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NUERRCOLORRE "\e[0m"
 #define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
 #define WARN_COLOR "\e[38;2;255;121;0;2m"
-#include "../../colibs/err.h"
+#include "../../colibs/err.h"           // for die, fopen
+
 #define DELAY   30
 #define WARNFILE_LOCATION "/usr/share/security/nuksu"
 #define RESTC "\e[0m"
 #ifdef INCLUDE_STYLE
-	#include "./style.c"
+#include "./style.c"                    // for set_style, theme
 #endif
 
 static long timestamp (void)
@@ -196,7 +197,7 @@ int main (int argc,char * argv[])
 			style = &ctx->style;
 			warning_style.background = nk_rgb (255,40,24);
 			warning_style.rounding = 4;
-			warning_style.text_forground= nk_rgb(0,0,0);
+			warning_style.text_forground= nk_rgb (0,0,0);
 			warning_style.text_background = warning_style.background;
 			nk_layout_row_dynamic (ctx, 30, 1);
 			pds.cursor_color=nk_rgb (255,255,255);
@@ -278,7 +279,7 @@ int main (int argc,char * argv[])
 				}
 
 				nk_layout_row_dynamic (ctx, 25, 1);
-				warning_widget (ctx ,warning_style ,warning);
+				warning_widget (ctx,warning_style,warning);
 			}
 		}
 

@@ -18,18 +18,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define AUTH_DEBG*/
 #define USERNAME "root"
 #define USERNAMEL 4
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <stdio.h>                 // for fseek, size_t, fclose, fread, ftell
+#include <stdlib.h>                // for free, NULL, malloc
+#include <string.h>                // for strcmp, strncmp, strncpy, strchr
+#include <unistd.h>                // for crypt, NULL
+
 #define REDEFFUNCS
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLORRE "\e[0m"
 #define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
-#include "../../../colibs/err.h"
-#include "../../../colibs/bool.h"
+#include "../../../colibs/bool.h"  // for true, bool, false
+#include "../../../colibs/err.h"   // for fopen
+#include "auth.h"
 
 /* Goes through the passwd file opened in a char string named |buffer|
  * line by line searching for the line starting with /USERNAME/ + ':' (The
@@ -141,21 +143,12 @@ static char * get_papersalt (char * hash)
 	papersalt [papersaltl]= '\0';
 	return papersalt;
 }
-enum auth_return
-{
-	FAIL = 0,	/* Authentication failed . 		*/
-	SUCCESSES = 1,	/* Authentication was successful .	*/
-	NOPASS = 2 ,	/* Account does not have a password .	*/
-	LOCKED = -1 ,	/* Account is temporarily locked .	*/
-	NOLOGIN = -2 ,	/* Account does not allow logins .	*/
-
-};
 /* Authenticates the user /USERNAME/ with the password |enterdpasswd| with the
  * user record in the file |passwd_fileloction| .
  * The function returns a value of type 'enum auth_return' depending on
  * the authentications result .
  */
-char auth (char * enterdpasswd,char * passwd_fileloction)
+enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
 {
 	char * user_record=NULL;
 	FILE * passwd_file=NULL;

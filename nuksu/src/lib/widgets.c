@@ -14,33 +14,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <math.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/timespec.h>
-#include <X11/cursorfont.h>
-#include <stdlib.h>
-#include "../../../colibs/bool.h"
+#include <stdio.h>                         // for size_t, NULL
+#include <stdlib.h>                        // for realloc
+#include <sys/time.h>                      // for gettimeofday, timeval
+
+#include "../../../colibs/bool.h"          // for bool, false, true
+
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_IMPLEMENTATION
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
-#include "../../../colibs/nuklear.h"
-#include "../../../colibs/nuklear_xlib.h"
-#include "strrmadd.h"
-#include <sys/time.h>
-#include <time.h>
-#include <sys/timespec.h>
-#include <X11/cursorfont.h>
+#include "../../../colibs/nuklear.h"       // for nk_rect, nk_input, nk_edit...
+#include "../../../colibs/nuklear_xlib.h"  // for XWindow
+#include "strrmadd.h"                      // for strrm, stradd
 #include "widgets.h"
+
 #define CHAR_REPEAT_DELAY 100
 
 
