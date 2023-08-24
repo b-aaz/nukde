@@ -41,22 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../colibs/nuklear_xlib.h"
 
 #define DTIME           20
-typedef struct XWindow XWindow;
-struct XWindow
-{
-	Display * dpy;
-	Window root;
-	Visual * vis;
-	Colormap cmap;
-	XWindowAttributes attr;
-	XSetWindowAttributes swa;
-	Window win;
-	int screen;
-	XFont * font;
-	unsigned int width;
-	unsigned int height;
-	Atom wm_delete_window;
-};
 
 static void die (const char * fmt, ...)
 {

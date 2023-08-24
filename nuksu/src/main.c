@@ -59,23 +59,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef INCLUDE_STYLE
 #include "./style.c"
 #endif
-
-typedef struct XWindow XWindow;
-struct XWindow
-{
-    Display * dpy;
-    Window root;
-    Visual * vis;
-    Colormap cmap;
-    XWindowAttributes attr;
-    XSetWindowAttributes swa;
-    Window win;
-    int screen;
-    XFont * font;
-    unsigned int width;
-    unsigned int height;
-    Atom wm_delete_window;
-};
 enum { NS_PER_SECOND = 1000000000 };
 void sub_timespec(struct timespec t1, struct timespec t2,
                   struct timespec * td)

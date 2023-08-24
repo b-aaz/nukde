@@ -35,6 +35,21 @@ NK_API struct nk_image nk_xsurf_load_image_from_memory(const void * membuf, nk_u
 NK_API XFont        *       nk_xfont_create(Display * dpy, const char * name);
 NK_API void                 nk_xfont_del(Display * dpy, XFont * font);
 
+struct XWindow
+{
+	Display * dpy;
+	Window root;
+	Visual * vis;
+	Colormap cmap;
+	XWindowAttributes attr;
+	XSetWindowAttributes swa;
+	Window win;
+	int screen;
+	XFont * font;
+	unsigned int width;
+	unsigned int height;
+	Atom wm_delete_window;
+};
 #endif
 /*
  * ==============================================================
