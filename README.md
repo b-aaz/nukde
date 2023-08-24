@@ -2,12 +2,17 @@
 A Desktop environment brought to life by the [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) toolkit 
 and written in C
 
-# So ....
-I was tired with the state of bloated toolkits and the desktop environments based on them .
-So i decided to start writing my own in my free time .
+# Why ?
+I was tired with the state of bloated toolkits and the desktop environments
+based on them .  So i decided to start writing my own in my free time .
 
-The goal of this project is to make a DE witch is fast, modular and minimal (like really minimal) with modern looks and bells and whistles . 
-I've intended to write this program(s) to be a \*BSD specific and I have no motive to port it to Linux .
+The goal of this project is to make a DE witch is simple, fast, modular,
+minimal and easily configurable; Also witch is respectful to the UNIX ideas 
+but with modern looks .
+I also want to try doing things in new ways that may not be with total 
+adherence with the classic desktop metaphor .
+
+This project currently only supports FreeBSD . 
 
 ## Things done:
 + Have Wrote the Nukdesk a desktop program .
@@ -20,21 +25,21 @@ I've intended to write this program(s) to be a \*BSD specific and I have no moti
 + Simple and universal configuration format
 + Respects the UNIX philosophy
 + Small
-+ fast (I hope)
++ Fast (I hope)
 
 ## New things:
 + Nukmenu : A simple and small menu program inspired by 9menu
 
 
 ## TODOS:
-+ Document the programs []
-+ Comment this slab of code [@]
++ Document the programs [@]
++ Comment the code [@]
 + Write some nice Makefiles [X]
 + Move nuksu from Xlib to opengl [-] 
 + Complete the desktop [@]
 + Move to ANSI C []
 + Test on (Open&Net)BSD [@]
-+ Segment the functions in different files [X]
++ Segment the functions to different files [X]
 + Write a menu program [X]
 + and MORE .....
 
