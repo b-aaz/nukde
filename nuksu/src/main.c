@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "./lib/auth.h"                 // for auth
 #include "/root/repo/colibs/bool.h"     // for true, bool, false
-#include "/root/repo/colibs/nuklear.h"  // for nk_rgb, nk_layout_row_dynamic
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -36,11 +35,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define NK_INPUT_MAX 2 */
 #include "../../colibs/nuklear.h"
 #include "../../colibs/nuklear_xlib.h"  // for XWindow, nk_xfont_create, nk_...
+struct XWindow
+{
+	Display * dpy;
+	Window root;
+	Visual * vis;
+	Colormap cmap;
+	XWindowAttributes attr;
+	XSetWindowAttributes swa;
+	Window win;
+	int screen;
+	XFont * font;
+	unsigned int width;
+	unsigned int height;
+	Atom wm_delete_window;
+};
 #include "./lib/widgets.h"              // for passwords_input_style, password
 
 #define DTIME          20
-#define WINDOW_WIDTH    200
-#define WINDOW_HEIGHT   110
+#define WINDOW_WIDTH 200
+#define WINDOW_HEIGHT 110
 #define CHANCES   3
 /*#define SHIFT 5*/
 #define NUERRREDEFFUNCS
@@ -55,7 +69,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define WARNFILE_LOCATION "/usr/share/security/nuksu"
 #define RESTC "\e[0m"
 #ifdef INCLUDE_STYLE
-#include "./style.c"                    // for set_style, theme
+	#include "./style.c"                    // for set_style, theme
 #endif
 
 static long timestamp (void)
@@ -79,6 +93,33 @@ static void sleep_for (long t)
 
 	while (-1 == nanosleep (&req, &req));
 }
+void read_warning_file (short int * attempts, time_t * last_exceeding_time)
+{
+	FILE * warning_file;
+	warning_file=fopen (WARNFILE_LOCATION,"r");
+
+	if (warning_file==NULL)
+	{
+		die ("%s\n","Can not open the warning file");
+	}
+
+	fscanf (warning_file,"%hd\n%ld",attempts,last_exceeding_time);
+	fclose (warning_file);
+}
+void write_warning_file (short int attempts, time_t  last_exceeding_time)
+{
+	FILE * warning_file;
+	warning_file=fopen (WARNFILE_LOCATION,"w");
+
+	if (warning_file==NULL)
+	{
+		die ("%s\n","Can not open the warning file");
+	}
+
+	fprintf (warning_file,"%d\n%ld",attempts,last_exceeding_time);
+	fclose (warning_file);
+}
+
 int main (int argc,char * argv[])
 {
 	long dt;
@@ -86,35 +127,27 @@ int main (int argc,char * argv[])
 	struct nk_context * ctx;
 	bool running = true;
 	bool warn=false;
-	time_t utime=0;
-	short int tries=0;
+	time_t last_exceeding_time=0;
+	short int attempts=0;
 	struct XWindow xw;
 	struct password password;
-	FILE * init;
 	struct passwords_input_data pd ;
-	pd.active=0;
-	pd.lockopeness=0;
-	pd.lastt=0;
-	pd.shift=0;
-	pd.cursor_pos=0;
-	pd.showpassword=0;
+	char warning [100];
+	time_t timeofnow;
+	memset (&pd,0,sizeof (pd));
+	pd.active=true;
 
 	if (argc==1)
 	{
 		die ("%s\n","No programs specified ");
 	}
 
-	if (access (WARNFILE_LOCATION,F_OK))
-	{
-		init=fopen (WARNFILE_LOCATION,"w");
-
-		if (init==NULL)
-		{
-			die ("%s\n","Can not open the warning file");
-		}
-
-		fclose (init);
+	read_warning_file (&attempts, &last_exceeding_time);
+			time (&timeofnow);
+	if (timeofnow-last_exceeding_time < DELAY){
+		 warn=true;
 	}
+
 
 	password.bufsize = 2;
 	password.length=0;
@@ -186,11 +219,11 @@ int main (int argc,char * argv[])
 		{
 			struct nk_window * win;
 			struct nk_style * style;
-			time_t timenow;
+			bool timeupdated;
+			time_t timeoflastframe;
 			struct warning_style warning_style;
 			struct passwords_input_style  pds;
-			char warning [100];
-			FILE * warnfile;
+			enum auth_return auth_return_val;
 			Cursor cu;
 			cu = XCreateFontCursor (xw.dpy,XC_xterm);
 			win = ctx->current;
@@ -216,66 +249,88 @@ int main (int argc,char * argv[])
 			pds.lockstyle.key_hole=nk_rgb (255,255,255);
 			pds.label="Enter password";
 			password_input (ctx,&pd,pds,&password,xw,cu);
+			timeoflastframe = timeofnow ;
+			time (&timeofnow);
+
+			if (timeofnow != timeoflastframe)
+			{
+				timeupdated = true ;
+			}
+			else
+			{
+				timeupdated = false ;
+			}
+
 			nk_layout_row_dynamic (ctx, 25, 1);
-			time (&timenow);
 
 			if (nk_button_label (ctx, "Go!") || nk_input_is_key_pressed (&ctx->input, NK_KEY_ENTER))
 			{
-				warnfile=fopen (WARNFILE_LOCATION,"r");
+				read_warning_file (&attempts, &last_exceeding_time);
 
-				if (warnfile==NULL)
+				if ( (timeofnow-last_exceeding_time) >DELAY)
 				{
-					die ("%s\n","Can not open the warning file");
-				}
-
-				fscanf (warnfile,"%hd\n%ld",&tries,&utime);
-				fclose (warnfile);
-
-				if ( (timenow-utime) >DELAY)
-				{
-					if (auth (password.buf,"/etc/master.passwd"))
+					if (attempts!=0)
 					{
-						execvp (argv[1],argv+1);
-						die ("%s\n","Can not execute the program");
+						write_warning_file (0,  last_exceeding_time);
 					}
-					else
+
+					auth_return_val =auth (password.buf,"/etc/master.passwd");
+
+					switch (auth_return_val)
 					{
-						puts (WARN_COLOR"Wrong password"RESTC);
-						warn=true;
-						tries++;
+						case AUTH_NOPASS :
+							puts (WARN_COLOR"Account has no password"RESTC);
+						case AUTH_SUCCESSES:
+							execvp (argv[1],argv+1);
+							die ("%s\n","Can not execute the program");
+							break;
 
-						if (tries>=CHANCES)
-						{
-							tries=0;
-							utime=timenow;
-						}
+						case AUTH_FAIL:
+							puts (WARN_COLOR"Wrong password"RESTC);
+							warn=true;
+							attempts++;
 
-						warnfile=fopen (WARNFILE_LOCATION,"w");
+							if (attempts>=CHANCES)
+							{
+								attempts=0;
+								last_exceeding_time=timeofnow;
+							}
 
-						if (warnfile==NULL)
-						{
-							die ("%s\n","Can not open the warning file");
-						}
-
-						fprintf (warnfile,"%d\n%ld",tries,utime);
-						fclose (warnfile);
+							write_warning_file (attempts,  last_exceeding_time);
+							snprintf (warning,100,"Wrong password %d more attempts",CHANCES-attempts);
+							break;
+						case AUTH_LOCKED :
+							puts (WARN_COLOR"Account is locked"RESTC);
+							warn=true;
+							snprintf (warning,100,"Account is locked",CHANCES-attempts);
+							break;
+						case AUTH_NOLOGIN :
+							puts (WARN_COLOR"Account does not allow logins"RESTC);
+							warn=true;
+							snprintf (warning,100,"Account does not allow logins",CHANCES-attempts);
+							break;
 					}
 				}
 				else
 				{
 					warn=true;
+						snprintf (warning,100,"Too many attempts wait for %lds",DELAY+last_exceeding_time-timeofnow);
 				}
 			}
 
 			if (warn)
 			{
-				if (CHANCES-tries==CHANCES&&timenow-utime<DELAY)
+				if (timeupdated)
 				{
-					snprintf (warning,100,"Too meany tries wait for %lds",DELAY+utime-timenow);
-				}
-				else
-				{
-					snprintf (warning,100,"Wrong password %d more tries",CHANCES-tries);
+					if (timeofnow-last_exceeding_time<DELAY)
+					{
+						snprintf (warning,100,"Too many attempts wait for %lds",DELAY+last_exceeding_time-timeofnow);
+					}
+
+					if (timeofnow-last_exceeding_time==DELAY)
+					{
+						warn = false;
+					}
 				}
 
 				nk_layout_row_dynamic (ctx, 25, 1);

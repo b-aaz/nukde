@@ -50,7 +50,7 @@ static char * get_user_record (char * buffer)
 	{
 		if (newline)
 		{
-			if (strncmp (buffer+char_index, USERNAME":$", USERNAMEL+2) == 0)
+			if (strncmp (buffer+char_index, USERNAME":", USERNAMEL+1) == 0)
 			{
 				buffer += char_index ;
 				size_t linelength = 0;
@@ -71,7 +71,9 @@ static char * get_user_record (char * buffer)
 		newline=buffer[char_index]=='\n'?true:false;
 		char_index++;
 	}
-
+	if (!user_record){
+	die("%s\n","No user record found");
+	}
 	return user_record;
 }
 /* Extracts the users encrypted passwords "hash" out of the given user record
@@ -86,8 +88,9 @@ static char * get_hash (char * user_record)
 {
 	char * hash ;
 	size_t hashl=0;
+
 	user_record = strchr (user_record, ':');
-	user_record ++ ;
+	user_record++;
 
 	while (user_record[hashl] != ':')
 	{
@@ -174,11 +177,11 @@ enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
 
 	if (rootusershash == NULL)
 	{
-		return NOPASS;
+		return AUTH_NOPASS;
 	}
 	else if (strcmp (rootusershash, "*") == 0)
 	{
-		return NOLOGIN ;
+		return AUTH_NOLOGIN ;
 	}
 
 	free (user_record);
@@ -186,7 +189,7 @@ enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
 
 	if (papersalt == NULL)
 	{
-		return LOCKED;
+		return AUTH_LOCKED;
 	}
 
 	enterdpasswd_hash = crypt (enterdpasswd, papersalt);
