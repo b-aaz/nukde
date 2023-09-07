@@ -13,28 +13,43 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdlib.h>
-#include <string.h>
-char *strrm(char * str,size_t strl,size_t idx,int num)
-{
-    for(; idx<strl ;idx++)
-    {
-        str[idx]=str[idx+num];
-    }
-    str[idx]='\0';
-    return str;
+#include <stdlib.h>  // for size_t
+/*
+ * These functions DO NOT handle the memory reallocation themselves .
+ */
 
-}
-char *stradd(char * str,int strl,char * stradd,int straddl,int idx)
+/* Removes |num| chars starting at the |pos| position from the string |str|
+ * with the length of |strl| .
+ */
+char * strrm (char * str,size_t strl,size_t pos,size_t num)
 {
-    int j = 0;
-    for(; strl >= idx; strl--)
-    {
-        str[straddl+strl]=str[strl];
-    }
-    for(; j<straddl; j++)
-    {
-        str[idx+j]=stradd[j];
-    }
-    return str;
+	for (; pos<strl ; pos++)
+	{
+		str[pos]=str[pos+num];
+	}
+
+	str[pos]='\0';
+	return str;
+}
+
+/* Inserts the string |stradd| with the length |straddl| at the |pos| position
+ * to the string |str| with the length |strl| .
+ *
+ * You need to allocate sufficient memory at |str| to hold |strl|+|straddl|+1
+ * failure to do so will result in UB .  
+ */
+char * stradd (char * str,size_t strl,char * stradd,size_t straddl,size_t pos)
+{
+	do
+	{
+		str[straddl+strl]=str[strl];
+	}
+	while (strl>pos&&--strl);
+
+	while (straddl-->0)
+	{
+		str[pos+straddl]=stradd[straddl];
+	}
+
+	return str;
 }

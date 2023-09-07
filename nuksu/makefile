@@ -7,18 +7,21 @@ BIN=nuksu
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
 CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
-OBFILES=$(BINDIR)main.o $(BINDIR)strrmadd.o $(BINDIR)auth.o
+OBFILES=$(BINDIR)main.o $(BINDIR)strrmadd.o $(BINDIR)auth.o $(BINDIR)widgets.o
 COOBFILES=
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	$(MAKEDIR)
 	cc $(OBFILES) $(COOBFILES)  $(CFLAGS) -o $@ -lX11 -lm -lcrypt 
-$(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h 
+$(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h $(COLIBS)bool.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)auth.c $(LIBCFLAGS) $(CFLAGS) -o $@ 
+$(BINDIR)widgets.o: $(LIBS)widgets.c $(COLIBS)bool.h  $(LIBS)strrmadd.h
+	$(MAKEDIR)
+	cc -c   $(LIBS)widgets.c $(LIBCFLAGS) $(CFLAGS) -o $@ 
 $(BINDIR)strrmadd.o: $(LIBS)strrmadd.c 
 	$(MAKEDIR)
 	cc -c  $(LIBS)strrmadd.c $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(LIBS)auth.h $(LIBS)widgets.h
 	$(MAKEDIR)
 	cc -c $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@

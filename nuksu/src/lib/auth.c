@@ -13,141 +13,195 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*auth for freebsd*/
+/*                  User authentication library for FreeBSD                  */
+
 /*#define AUTH_DEBG*/
-#define USERNAME "root:"
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#define USERNAME "root"
+#define USERNAMEL 4
+#include <stdio.h>                 // for fseek, size_t, fclose, fread, ftell
+#include <stdlib.h>                // for free, NULL, malloc
+#include <string.h>                // for strcmp, strncmp, strncpy, strchr
+#include <unistd.h>                // for crypt, NULL
+
 #define REDEFFUNCS
-#define NUERRREDEFFUNCS 
+#define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
 #define NUERRCOLORRE "\e[0m"
 #define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
-#include "../../../colibs/err.h"
-static char * findrootusersuserline(char * buffer)
+#include "../../../colibs/bool.h"  // for true, bool, false
+#include "../../../colibs/err.h"   // for fopen
+#include "auth.h"
+
+/* Goes through the passwd file opened in a char string named |buffer|
+ * line by line searching for the line starting with /USERNAME/ + ':' (The
+ * users record) .
+ * After the record has been found and its length determined a buffer is
+ * allocated for it and the line will be copied to it and then returned .
+ */
+/* Warning : Return value of this function should be freed when not needed . */
+static char * get_user_record (char * buffer)
 {
-	char * rootusersuserline=NULL;
-	char firstword[7];
-	size_t charnum=0;
-	for(charnum=0; charnum < strlen(buffer); charnum++)
+	char * user_record=NULL;
+	size_t char_index=0;
+	bool newline = true ;
+
+	while (char_index < strlen (buffer))
 	{
-		if(buffer[(charnum-1)] == '\n' || charnum == 0)
+		if (newline)
 		{
-			int tempcharnum = charnum;
-			int i;
-			for(i=0; i < 6; i++)
+			if (strncmp (buffer+char_index, USERNAME":", USERNAMEL+1) == 0)
 			{
-				firstword[i] = buffer[tempcharnum];
-				tempcharnum++;
-			}
-			firstword[6]='\0';
-			tempcharnum = charnum;
-			if(strcmp(firstword, USERNAME"$") == 0)
-			{
-				int linesize = 0;
-				int j = 0;
-				while(buffer[tempcharnum] != '\n')
+				buffer += char_index ;
+				size_t linelength = 0;
+
+				while (buffer[linelength] != '\n')
 				{
-					linesize++;
-					tempcharnum++;
+					linelength++;
 				}
-				linesize++;
-				rootusersuserline = (char *)malloc(linesize * sizeof(char)+1);
-				tempcharnum = charnum;
-				while(j < linesize)
-				{
-					rootusersuserline[j]=buffer[tempcharnum];
-					tempcharnum++;
-					j++;
-				}
-				rootusersuserline[j+1]='\0';
+
+				linelength++;
+				user_record =
+					(char *) malloc ( (linelength) * sizeof (char));
+				strlcpy (user_record,buffer,linelength);
 				break;
 			}
 		}
-	}
-	return rootusersuserline;
 
+		newline=buffer[char_index]=='\n'?true:false;
+		char_index++;
+	}
+	if (!user_record){
+	die("%s\n","No user record found");
+	}
+	return user_record;
 }
-static void freen(void ** p){
-free(*p);
-*p=NULL;
-}
-#define free(x) freen((void**)&(x))
-int auth(char *enterdpass,char  *passfileloction)
+/* Extracts the users encrypted passwords "hash" out of the given user record
+ * string |user_record| .
+ * The record has many fields separated by colons (':') the second field is the
+ * password hash which is the data we need . If the field is empty (Meaning the
+ * user has no password) this function returns NULL . For more info see
+ * master.passwd(5) and crypt(3) .
+ */
+/* Warning : Return value of this function should be freed when not needed . */
+static char * get_hash (char * user_record)
 {
-	char * rootusersuserline=NULL;
-	FILE * passfile=NULL;
-	char * buffer=NULL;
-	long passfilesize=0;
-	char * peper=NULL;
-	char * salt=NULL;
-	char * hash=NULL;
-	char * pepersalt=NULL;
-	char * rootusershash=NULL;
-	char * enterdpasshash=NULL;
-	size_t peperl=0;
-	size_t pepersaltl=0;
-	size_t saltl=0;
+	char * hash ;
 	size_t hashl=0;
-	passfile=fopen(passfileloction, "r");
-	fseek(passfile, 0L, SEEK_END);
-	passfilesize = ftell(passfile);
-	fseek(passfile, 0L, SEEK_SET);
-	buffer = (char *)malloc(passfilesize + 1);
-	fread(buffer, sizeof(char), passfilesize, passfile);
-	fclose(passfile);
-	rootusersuserline = findrootusersuserline(buffer);
-	free(buffer);
 
-	strtok(rootusersuserline, "$");
-	peper = strtok(NULL, "$");
-	peperl = strlen (peper) ;
-	salt = strtok(NULL, "$");
-	saltl = strlen (salt) ;
-	hash = strtok(NULL, ":");
-	hashl= strlen(hash);
-	free(rootusersuserline);
+	user_record = strchr (user_record, ':');
+	user_record++;
 
-	pepersaltl=1+peperl+1+saltl;
-	
-	pepersalt = (char *)malloc((1 + peperl+ 1 + saltl + 1)*sizeof(char));
-	pepersalt[0]='$';
-	strncpy(pepersalt+1, peper,peperl);
-	pepersalt[peperl+1]='$';
-	strncpy(pepersalt+peperl+2, salt, saltl);
-	pepersalt[pepersaltl]='\0';
-	free(peper);
-	free(salt);
-	
-	rootusershash = (char *)malloc((pepersaltl+1+ hashl+ 1)*sizeof(char));
-	strncpy(rootusershash, pepersalt,pepersaltl);
-	rootusershash[pepersaltl]='$';
-	strncpy(rootusershash+pepersaltl+1, hash,hashl);
-	rootusershash[hashl+pepersaltl+1]='\0';
-	free(hash);
-	
-	enterdpasshash = crypt(enterdpass, pepersalt);
-	free(pepersalt);
+	while (user_record[hashl] != ':')
+	{
+		hashl++;
+	}
+
+	if (hashl == 0)
+	{
+		return NULL ;
+	}
+
+	hash = malloc ( (hashl+1) * sizeof (char));
+	strncpy (hash, user_record, hashl);
+	hash [hashl]='\0';
+	return hash;
+}
+
+/* Extracts the hash's salt and what I started to call "paper", out of the hash
+ * string given by |hash| ; Paper is a digit surrounded by a pair of
+ * dollar signs ('$') behind the salt that indicates what type of hashing
+ * algorithm is used to encrypt the password .
+ * A typical user record looks like this :
+ * "user:hash:stuff:we:do:not:need"
+ * and a typical (Modular) hash looks like this :
+ * "$digit$salt$the_actual_hash"
+ *  |     |    |
+ *  _______    |
+ *   paper     |
+ *  |          |
+ *  ____________
+ *   "papersalt"
+ * Also the hash can be prepended by the phrase "*LOCKED*" to indicate that no
+ * one can login to that account and it's locked out .
+ * so the function returns NULL on this condition . For more info see
+ * master.passwd(5) and crypt(3) .
+ */
+/* Warning : Return value of this function should be freed when not needed . */
+static char * get_papersalt (char * hash)
+{
+	size_t papersaltl;
+	char * papersalt;
+
+	if (strncmp (hash, "*LOCKED*",8) ==0)
+	{
+		return NULL ;
+	}
+
+	char * last_dollar_sign_pos;
+	last_dollar_sign_pos = strrchr (hash,'$');
+	papersaltl = last_dollar_sign_pos - hash ;
+	papersalt = malloc ( (papersaltl+1) * sizeof (char));
+	strncpy (papersalt,hash,papersaltl);
+	papersalt [papersaltl]= '\0';
+	return papersalt;
+}
+/* Authenticates the user /USERNAME/ with the password |enterdpasswd| with the
+ * user record in the file |passwd_fileloction| .
+ * The function returns a value of type 'enum auth_return' depending on
+ * the authentications result .
+ */
+enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
+{
+	char * user_record=NULL;
+	FILE * passwd_file=NULL;
+	char * buffer=NULL;
+	long passwd_filesize=0;
+	char * papersalt=NULL;
+	char * rootusershash=NULL;
+	char * enterdpasswd_hash=NULL;
+	size_t paperl=0;
+	size_t papersaltl=0;
+	bool ret ;
+	passwd_file=fopen (passwd_fileloction, "r");
+	fseek (passwd_file, 0L, SEEK_END);
+	passwd_filesize = ftell (passwd_file);
+	fseek (passwd_file, 0L, SEEK_SET);
+	buffer = (char *) malloc (passwd_filesize + 1);
+	fread (buffer, sizeof (char), passwd_filesize, passwd_file);
+	fclose (passwd_file);
+	buffer[passwd_filesize]='\0';
+	user_record = get_user_record (buffer);
+	free (buffer);
+	rootusershash= get_hash (user_record);
+
+	if (rootusershash == NULL)
+	{
+		return AUTH_NOPASS;
+	}
+	else if (strcmp (rootusershash, "*") == 0)
+	{
+		return AUTH_NOLOGIN ;
+	}
+
+	free (user_record);
+	papersalt = get_papersalt (rootusershash);
+
+	if (papersalt == NULL)
+	{
+		return AUTH_LOCKED;
+	}
+
+	enterdpasswd_hash = crypt (enterdpasswd, papersalt);
+	free (papersalt);
 #ifdef AUTH_DEBG
-	printf("hash of enterd pass:\n"
-	"%s\n"
-	"the real hash\n"
-	"%s\n"
-	,enterdpasshash,rootusershash);
+	printf ("Hash of the entered password:\n"
+			"%s\n"
+			"The real hash:\n"
+			"%s\n"
+			,enterdpasswd_hash,rootusershash);
 #endif
-	if(strcmp(enterdpasshash, rootusershash) == 0)
-	{
-		free(enterdpasshash);
-		free(rootusershash);
-		return 1;
-	}
-	else
-	{
-		free(rootusershash);
-		free(enterdpasshash);
-		return 0;
-	}
+	ret = strcmp (enterdpasswd_hash, rootusershash) == 0 ? true : false ;
+	free (rootusershash);
+	return ret;
 }
