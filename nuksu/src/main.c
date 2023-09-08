@@ -35,21 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*#define NK_INPUT_MAX 2 */
 #include "../../colibs/nuklear.h"
 #include "../../colibs/nuklear_xlib.h"  // for XWindow, nk_xfont_create, nk_...
-struct XWindow
-{
-	Display * dpy;
-	Window root;
-	Visual * vis;
-	Colormap cmap;
-	XWindowAttributes attr;
-	XSetWindowAttributes swa;
-	Window win;
-	int screen;
-	XFont * font;
-	unsigned int width;
-	unsigned int height;
-	Atom wm_delete_window;
-};
 #include "./lib/widgets.h"              // for passwords_input_style, password
 
 #define DTIME          20
