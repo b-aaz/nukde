@@ -674,6 +674,10 @@ int main (void)
 			nk_draw_image (&win->buffer,nk_rect (0,0,xwin.width,xwin.height),&bgimage,nk_rgb (255,255,255));
 			max_colomns= (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) / (gcfg.icon_width+gcfg.icon_h_pad);
 			colomn_pad = (float) ( (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) % (gcfg.icon_width+gcfg.icon_h_pad)) /2;
+			if (ctx->input.keyboard.text_len==1 && *ctx->input.keyboard.text=='q')
+			{
+				die("%s\n", "Exit key bind pressed");
+			}
 
 			while (row< (fnum/max_colomns)+1)
 			{
