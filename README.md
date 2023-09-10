@@ -1,14 +1,14 @@
 # Nukde
 A Desktop environment brought to life by the [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear) toolkit 
-and written in C
+and written in C .
 
 # Why ?
-I was tired with the state of bloated toolkits and the desktop environments
+I was tired with bloated toolkits and the desktop environments
 based on them .  So i decided to start writing my own in my free time .
 
-The goal of this project is to make a DE witch is simple, fast, modular,
-minimal and easily configurable; Also witch is respectful to the UNIX ideas 
-but with modern looks .
+The goal of this project is to make a desktop environment witch is first
+respectful of the UNIX philosophy and second has nice looks and useful
+features .
 I also want to try doing things in new ways that may not be with total 
 adherence with the classic desktop metaphor .
 
