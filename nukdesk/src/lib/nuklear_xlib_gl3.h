@@ -47,7 +47,6 @@ NK_API void                 nk_x11_device_destroy(void);
 
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include <GL/glext.h>
 
 #ifndef NK_X11_DOUBLE_CLICK_LO
 #define NK_X11_DOUBLE_CLICK_LO 20
@@ -174,7 +173,7 @@ struct nk_x11_device {
     struct opengl_info info;
 #endif
     struct nk_buffer cmds;
-    struct nk_draw_null_texture null;
+    struct nk_draw_null_texture tex_null;
     GLuint vbo, vao, ebo;
     GLuint prog;
     GLuint vert_shdr;
@@ -537,7 +536,7 @@ nk_x11_render(enum nk_anti_aliasing AA, int max_vertex_buffer, int max_element_b
             config.vertex_layout = vertex_layout;
             config.vertex_size = sizeof(struct nk_x11_vertex);
             config.vertex_alignment = NK_ALIGNOF(struct nk_x11_vertex);
-            config.null = dev->null;
+            config.tex_null = dev->tex_null;
             config.circle_segment_count = 22;
             config.curve_segment_count = 22;
             config.arc_segment_count = 22;
@@ -556,7 +555,6 @@ nk_x11_render(enum nk_anti_aliasing AA, int max_vertex_buffer, int max_element_b
         /* iterate over and execute each draw command */
         nk_draw_foreach(cmd, &x11.ctx, &dev->cmds)
         {
-       
             if (!cmd->elem_count) continue;
             glBindTexture(GL_TEXTURE_2D, (GLuint)cmd->texture.id);
             glScissor(
@@ -564,8 +562,6 @@ nk_x11_render(enum nk_anti_aliasing AA, int max_vertex_buffer, int max_element_b
                 (GLint)((height - (GLint)(cmd->clip_rect.y + cmd->clip_rect.h))),
                 (GLint)(cmd->clip_rect.w),
                 (GLint)(cmd->clip_rect.h));
-                   glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             glDrawElements(GL_TRIANGLES, (GLsizei)cmd->elem_count, GL_UNSIGNED_SHORT, offset);
             offset += cmd->elem_count;
         }
@@ -596,7 +592,7 @@ nk_x11_font_stash_end(void)
     const void *image; int w, h;
     image = nk_font_atlas_bake(&x11.atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
     nk_x11_device_upload_atlas(image, w, h);
-    nk_font_atlas_end(&x11.atlas, nk_handle_id((int)x11.ogl.font_tex), &x11.ogl.null);
+    nk_font_atlas_end(&x11.atlas, nk_handle_id((int)x11.ogl.font_tex), &x11.ogl.tex_null);
     if (x11.atlas.default_font)
         nk_style_set_font(&x11.ctx, &x11.atlas.default_font->handle);
 }

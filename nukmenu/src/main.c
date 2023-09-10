@@ -539,7 +539,7 @@ int main (int argc, char * * argv)
 	long started;
 	int running = 1;
 	size_t num;
-	XWindow xw;
+	struct XWindow xw;
 	struct nk_context * ctx;
 	struct menu_item * current ;
 	struct menu_item * head;
