@@ -6,14 +6,14 @@ LIBS=$(SRC)lib/
 BIN=nukdesk
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
-CFLAGS=$(OP) -Wall  -g -L/usr/local/lib  -I/usr/local/include 
+CFLAGS=$(OP) -Wall  -g -I/usr/local/include 
 OBFILES=$(BINDIR)main.o $(BINDIR)nusort.o $(BINDIR)ffload.o $(BINDIR)fileops.o $(BINDIR)config-parser.o $(BINDIR)icon-widget.o $(BINDIR)icon-loader.o $(BINDIR)sortfiles.o
 COOBFILES=$(COBINDIR)spawn.o
 
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	$(MAKEDIR)
-	cc  $(OBFILES) $(COOBFILES) $(CFLAGS) -o $@ -lstdthreads -lX11 -lm -lGL -lGLU -lmagic 
+	cc  $(OBFILES) $(COOBFILES) $(CFLAGS) -o $@ -lstdthreads -lX11 -lm -lGL -lGLU -lmagic -L/usr/local/lib  
 $(BINDIR)nusort.o: $(LIBS)nusort.c $(LIBS)nusort.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)nusort.c $(LIBCFLAGS) $(CFLAGS) -o $@

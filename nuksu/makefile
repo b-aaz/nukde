@@ -6,13 +6,13 @@ LIBS=$(SRC)lib/
 BIN=nuksu
 BINDIR=./bin/
 COBINDIR:=$(COLIBS)bin/
-CFLAGS=$(OP)  -g -L/usr/local/lib  -I/usr/local/include 
+CFLAGS=$(OP)  -g -I/usr/local/include 
 OBFILES=$(BINDIR)main.o $(BINDIR)strrmadd.o $(BINDIR)auth.o $(BINDIR)widgets.o
 COOBFILES=
 
 $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES) 
 	$(MAKEDIR)
-	cc $(OBFILES) $(COOBFILES)  $(CFLAGS) -o $@ -lX11 -lm -lcrypt 
+	cc $(OBFILES) $(COOBFILES)  $(CFLAGS) -o $@ -lX11 -lm -lcrypt -L/usr/local/lib  
 $(BINDIR)auth.o: $(LIBS)auth.c $(COLIBS)err.h $(COLIBS)bool.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)auth.c $(LIBCFLAGS) $(CFLAGS) -o $@ 
