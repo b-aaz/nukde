@@ -432,15 +432,17 @@ int main (void)
 	struct fileinfo ** files;
 	size_t fi=0;
 	unsigned int fnum=0;
-	struct grid_config gcfg;
+	struct grid_config grid_cfg;
 	bool show_gridcfg_menu = false;
-	gcfg.icon_width = 100;
-	gcfg.min_l_pad = 30;
-	gcfg.min_r_pad = 30;
-	gcfg.icon_h_pad = 20;
-	gcfg.icon_v_pad = 20;
-	gcfg.icon_txt_pad = 20;
-	gcfg.row_pad = 10;
+	time_t time_of_last_frame ;
+	time_t time_of_now ;
+	grid_cfg.icon_width = 100;
+	grid_cfg.min_l_pad = 30;
+	grid_cfg.min_r_pad = 30;
+	grid_cfg.icon_h_pad = 20;
+	grid_cfg.icon_v_pad = 20;
+	grid_cfg.icon_txt_pad = 20;
+	grid_cfg.row_pad = 10;
 	ctx=init_window (&xwin,&glContext);
 	addfont (NULL,0,0);
 	magic_t magic_cookie_mime=0;
@@ -662,6 +664,7 @@ int main (void)
 
 		if (nk_begin (ctx, "desk", nk_rect (0, 0,xwin.width,xwin.height),0))
 		{
+			
 			struct nk_window * win;
 			unsigned int row=0;
 			unsigned int col;
@@ -669,11 +672,17 @@ int main (void)
 			float colomn_pad ;
 			unsigned int  icon_num;
 			struct nk_rect icon_rect ;
-			files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
+			time_of_last_frame = time_of_now;
+			time_of_now = time(NULL);
+			if (time_of_last_frame!= time_of_now)
+			{
+				/* Code here runs every second . */
+				files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
+			}
 			win = ctx->current;
 			nk_draw_image (&win->buffer,nk_rect (0,0,xwin.width,xwin.height),&bgimage,nk_rgb (255,255,255));
-			max_colomns= (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) / (gcfg.icon_width+gcfg.icon_h_pad);
-			colomn_pad = (float) ( (xwin.width- (gcfg.min_l_pad+gcfg.min_r_pad)) % (gcfg.icon_width+gcfg.icon_h_pad)) /2;
+			max_colomns= (xwin.width- (grid_cfg.min_l_pad+grid_cfg.min_r_pad)) / (grid_cfg.icon_width+grid_cfg.icon_h_pad);
+			colomn_pad = (float) ( (xwin.width- (grid_cfg.min_l_pad+grid_cfg.min_r_pad)) % (grid_cfg.icon_width+grid_cfg.icon_h_pad)) /2;
 			if (ctx->input.keyboard.text_len==1 && *ctx->input.keyboard.text=='q')
 			{
 				die("%s\n", "Exit key bind pressed");
@@ -686,10 +695,10 @@ int main (void)
 				while (col+ (row*max_colomns) <fnum && col<max_colomns)
 				{
 					icon_num=col+ (row*max_colomns);
-					icon_rect = nk_rect ( (col* (gcfg.icon_h_pad+gcfg.icon_width)+gcfg.min_l_pad+colomn_pad),
-										  (row* (gcfg.icon_width+gcfg.icon_v_pad+gcfg.icon_txt_pad))+gcfg.row_pad,
-										  gcfg.icon_width,
-										  gcfg.icon_width+gcfg.icon_txt_pad);
+					icon_rect = nk_rect ( (col* (grid_cfg.icon_h_pad+grid_cfg.icon_width)+grid_cfg.min_l_pad+colomn_pad),
+										  (row* (grid_cfg.icon_width+grid_cfg.icon_v_pad+grid_cfg.icon_txt_pad))+grid_cfg.row_pad,
+										  grid_cfg.icon_width,
+										  grid_cfg.icon_width+grid_cfg.icon_txt_pad);
 
 					if (files[icon_num]->icon_load_args.generateid)
 					{
@@ -708,8 +717,6 @@ int main (void)
 						{
 							files[icon_num]->isselected=true;
 							menu.spawn=true;
-							/*menu.pos.x=* (&ctx->input.mouse.pos.x);*/
-							/*menu.pos.y=* (&ctx->input.mouse.pos.y);*/
 						}
 					}
 
@@ -742,31 +749,31 @@ int main (void)
 				nk_layout_space_push (ctx, nk_rect (0,xwin.height-120,90,30));
 				nk_text (ctx,"icon_width",10,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (90,xwin.height-120,xwin.width-90,30));
-				nk_slider_int (ctx,0,&gcfg.icon_width,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.icon_width,100,1);
 				nk_layout_space_push (ctx, nk_rect (0,xwin.height-90,90,30));
 				nk_text (ctx,"min_r_pad",9,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (90,xwin.height-90,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.min_r_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.min_r_pad,100,1);
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-90,90,30));
 				nk_text (ctx,"icon_h_pad",10,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-90,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.icon_h_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.icon_h_pad,100,1);
 				nk_layout_space_push (ctx, nk_rect (0,xwin.height-60,90,30));
 				nk_text (ctx,"icon_v_pad",10,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (90,xwin.height-60,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.icon_v_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.icon_v_pad,100,1);
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-60,90,30));
 				nk_text (ctx,"icon_txt_pad",12,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-60,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.icon_txt_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.icon_txt_pad,100,1);
 				nk_layout_space_push (ctx, nk_rect (0,xwin.height-30,90,30));
 				nk_text (ctx,"row_pad",7,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (90,xwin.height-30,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.row_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.row_pad,100,1);
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2,xwin.height-30,90,30));
 				nk_text (ctx,"min_l_pad",9,NK_TEXT_CENTERED) ;
 				nk_layout_space_push (ctx, nk_rect (xwin.width/2+90,xwin.height-30,xwin.width/2-90,30));
-				nk_slider_int (ctx,0,&gcfg.min_l_pad,100,1);
+				nk_slider_int (ctx,0,(int *)&grid_cfg.min_l_pad,100,1);
 				nk_layout_space_end (ctx);
 			}
 		}
