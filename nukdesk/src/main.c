@@ -436,6 +436,9 @@ int main (void)
 	bool show_gridcfg_menu = false;
 	time_t time_of_last_frame ;
 	time_t time_of_now ;
+#ifdef  DEBUG
+	unsigned long long fps=0;
+#endif 
 	grid_cfg.icon_width = 100;
 	grid_cfg.min_l_pad = 30;
 	grid_cfg.min_r_pad = 30;
@@ -674,10 +677,17 @@ int main (void)
 			struct nk_rect icon_rect ;
 			time_of_last_frame = time_of_now;
 			time_of_now = time(NULL);
+#ifdef DEBUG  
+			fps++;
+#endif 
 			if (time_of_last_frame!= time_of_now)
 			{
 				/* Code here runs every second . */
 				files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
+#ifdef DEBUG 
+				printf("fps: %llu\n",fps);
+				fps=0;
+#endif
 			}
 			win = ctx->current;
 			nk_draw_image (&win->buffer,nk_rect (0,0,xwin.width,xwin.height),&bgimage,nk_rgb (255,255,255));
