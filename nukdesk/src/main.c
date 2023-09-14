@@ -31,12 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FAILSAFEICONIDX "../examples/icon.nucfg"
 #define FAILSAFEOPENIDX "../examples/open.nucfg"
 
-
+/* The err.h defines . */
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRLIBMAGIC
 #define NUERRSYSEVENT
 #define NUERRSTDLIB
+
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -68,7 +69,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
 #define NUKMENU "../nukmenu/bin/nukmenu"
-#define MENUINPUT "LBL:Menu\nremove\nopen\nsort by\n,name\n,size\n,type\n,modification date\n,creation date\n,access date\n"
+#define MENUINPUT "LBL:Menu\nremove\nopen\nsort by\n,name\n,size\n,type\n\
+,modification date\n,creation date\n,access date\n"
 
 #define MENUINPUTLEN 94
 #define MAXMENUITEMLEN 4
@@ -84,32 +86,19 @@ struct grid_config
 	unsigned int row_pad ;
 };
 
-
+/* Items that can be selected in the menu . */
 enum items
 {
-	REMOVE = 0,
-	OPEN = 1 ,
-	ST_NAME = 3 ,
-	ST_SIZE = 4 ,
-	ST_TYPE = 5 ,
-	ST_MODIFICATION_DATE = 6 ,
-	ST_CREATION_DATE = 7 ,
-	ST_ACCESS_DATE = 8 ,
-	TOGGAC = 9,
-	TOGGCFG = 10,
-};
-struct menu
-{
-	bool menu;
-	bool spawn;
-	bool isrunning;
-	int fd [2];
-	enum items selected;
-};
-struct id
-{
-	bool return_id;
-	unsigned int num;
+	MENU_REMOVE = 0,
+	MENU_OPEN = 1 ,
+	MENU_ST_NAME = 3 ,
+	MENU_ST_SIZE = 4 ,
+	MENU_ST_TYPE = 5 ,
+	MENU_ST_MODIFICATION_DATE = 6 ,
+	MENU_ST_CREATION_DATE = 7 ,
+	MENU_ST_ACCESS_DATE = 8 ,
+	MENU_TOGGAC = 9,
+	MENU_TOGGCFG = 10,
 };
 unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 {
@@ -124,6 +113,18 @@ unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 	die ("Invalid number %s",str);
 	return 0;
 }
+struct menu
+{
+	enum items selected;
+	bool spawn;
+	bool isrunning;
+	int fd [2]; /* Nukmenus stdin and stdout . */
+};
+struct id
+{
+	bool return_id;
+	unsigned int num;
+};
 pid_t spawnmenu (int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
@@ -334,6 +335,10 @@ void createglctx (struct XWindow * xwin, GLXContext * glContext)
 
 		if (gl_err || !*glContext)
 		{
+			/* Could not create GL 3.0 context. Fallback to old 2.x context.
+			 * If a version below 3.0 is requested, implementations will
+			 * return the newest context version compatible with OpenGL
+			 * version less than version 3.0.*/
 			attr[1] = 1;
 			attr[3] = 0;
 			gl_err = nk_false;
@@ -396,7 +401,7 @@ struct  nk_font * addfont (const char * font_path,float height, const struct  nk
 	nk_x11_font_stash_end();
 }
 
-struct nk_context * init_window (struct XWindow * xwin, GLXContext ** glContext)
+struct nk_context * init_window (struct XWindow * xwin, GLXContext * glContext)
 {
 	struct  nk_context * ctx;
 	int fb_count;
@@ -406,31 +411,30 @@ struct nk_context * init_window (struct XWindow * xwin, GLXContext ** glContext)
 	choosefb (xwin->dpy,&fb_count,&fbc);
 	findbestfb (xwin,fbc,fb_count);
 	creatwindow (xwin) ;
-	createglctx (xwin,&glContext);
+	createglctx (xwin,glContext);
 	ctx = nk_x11_init (xwin->dpy, xwin->win);
 	return ctx;
 }
-
-	struct sortby sb;
+/* Global variable to indicate to sort files based on what . */
+struct sortby sb;
 int main (void)
 {
 	struct XWindow xwin;
 	struct nk_context * ctx;
 	GLXContext glContext;
-	int running = 1;
+	bool running = true;
 	struct nk_colorf bg;
 	struct nk_image  bgimage;
 	char * folder="/desktop";
-	char * hpath;
+	char * home_path;
 	int kqid;
 	struct nk_vec2 lastpos;
 	struct dsk_dir desktop_dir;
 	struct dirent * dir ;
-	char * iconidx;
-	char * openidx;
+	char * iconcfg;
+	char * opencfg;
 	struct menu menu = {0};
 	struct fileinfo ** files;
-	size_t fi=0;
 	unsigned int fnum=0;
 	struct grid_config grid_cfg;
 	bool show_gridcfg_menu = false;
@@ -458,11 +462,12 @@ int main (void)
 #endif
 	magic_load (magic_cookie_mime,NULL);
 	magic_load (magic_cookie_hr,NULL);
-	iconidx=fileopentobuff (FAILSAFEICONIDX);
-	openidx=fileopentobuff (FAILSAFEOPENIDX);
-	hpath=getenv ("HOME");
-	desktop_dir.d_path =malloc (strlen (hpath)+strlen (folder)+1);
-	strcpy (desktop_dir.d_path,hpath);
+	iconcfg=fileopentobuff (FAILSAFEICONIDX);
+	opencfg=fileopentobuff (FAILSAFEOPENIDX);
+	/* Getting the location of the users home folder . */
+	home_path=getenv ("HOME");
+	desktop_dir.d_path =malloc (strlen (home_path)+strlen (folder)+1);
+	strcpy (desktop_dir.d_path,home_path);
 	strcat (desktop_dir.d_path,folder);
 	desktop_dir.d_open = open (desktop_dir.d_path, O_RDONLY);
 	EV_SET (&desktop_dir.d_change,desktop_dir.d_open, EVFILT_VNODE,
@@ -470,7 +475,7 @@ int main (void)
 			NOTE_WRITE,
 			0, 0);
 	desktop_dir.d=opendir (desktop_dir.d_path);
-
+	/* Counting the number of files in the desktop folder . */
 	if (desktop_dir.d)
 	{
 		while ( (dir=readdir (desktop_dir.d)) != NULL)
@@ -487,17 +492,21 @@ int main (void)
 	}
 
 #ifdef DEBUG
-	printf ("%d\n",fnum);
+	printf ("Number of files: %d\n",fnum);
 #endif
 	files=malloc (fnum * sizeof (struct fileinfo *));
 	rewinddir (desktop_dir.d);
 
-	while ( (dir=readdir (desktop_dir.d)) != NULL)
+	/* Initializing the files array . */
 	{
-		if (! (!strcmp (".",dir->d_name) ||!strcmp ("..",dir->d_name)))
+		size_t fi=0; /* Iterator for files . */
+		while ( (dir=readdir (desktop_dir.d)) != NULL)
 		{
-			files[fi]=new_file (desktop_dir.d_path,dir->d_name,iconidx,magic_cookie_mime,magic_cookie_hr);
-			fi++;
+			if (! (!strcmp (".",dir->d_name) ||!strcmp ("..",dir->d_name)))
+			{
+				files[fi]=new_file (desktop_dir.d_path,dir->d_name,iconcfg,magic_cookie_mime,magic_cookie_hr);
+				fi++;
+			}
 		}
 	}
 
@@ -505,11 +514,12 @@ int main (void)
 	puts ("Loading icons");
 #endif
 
-	for (unsigned int i = 0; i<fnum ; i++)
+	for (size_t i = 0; i<fnum ; i++)
 	{
 		start_thrd_for_icon (files,i,i);
 	}
 
+	/* Sorting files at startup . */
 	sb.ac=1;
 	sb.st=NAME;
 	sortfiles (files,fnum,sb);
@@ -601,7 +611,7 @@ int main (void)
 
 							switch (menu.selected)
 							{
-								case REMOVE :
+								case MENU_REMOVE :
 									while (sif<fnum)
 									{
 										if (files[sif]->isselected==true)
@@ -614,12 +624,12 @@ int main (void)
 
 									break;
 
-								case OPEN :
+								case MENU_OPEN :
 									while (sif<fnum)
 									{
 										if (files[sif]->isselected==true)
 										{
-											launch (openidx,*files[sif]);
+											launch (opencfg,*files[sif]);
 										}
 
 										sif++;
@@ -627,10 +637,10 @@ int main (void)
 
 									break;
 
-								case TOGGCFG :
+								case MENU_TOGGCFG :
 									show_gridcfg_menu=!show_gridcfg_menu;
 									break;
-								case TOGGAC :
+								case MENU_TOGGAC :
 									sb.ac=-sb.ac;
 									sortfiles (files,fnum,sb);
 									break;
@@ -683,7 +693,7 @@ int main (void)
 			if (time_of_last_frame!= time_of_now)
 			{
 				/* Code here runs every second . */
-				files= updatefiles (desktop_dir,&fnum,kqid,files,iconidx,magic_cookie_mime,magic_cookie_hr);
+				files= updatefiles (desktop_dir,&fnum,kqid,files,iconcfg,magic_cookie_mime,magic_cookie_hr);
 #ifdef DEBUG 
 				printf("fps: %llu\n",fps);
 				fps=0;
@@ -695,7 +705,8 @@ int main (void)
 			colomn_pad = (float) ( (xwin.width- (grid_cfg.min_l_pad+grid_cfg.min_r_pad)) % (grid_cfg.icon_width+grid_cfg.icon_h_pad)) /2;
 			if (ctx->input.keyboard.text_len==1 && *ctx->input.keyboard.text=='q')
 			{
-				die("%s\n", "Exit key bind pressed");
+				puts("Exit key bind pressed");
+				running=false;
 			}
 
 			while (row< (fnum/max_colomns)+1)
@@ -715,7 +726,7 @@ int main (void)
 						generateid (files[icon_num]);
 					};
 
-					draw_icon (ctx,files[icon_num]->name, (files[icon_num]),openidx,icon_rect);
+					draw_icon (ctx,files[icon_num]->name, (files[icon_num]),opencfg,icon_rect);
 
 					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_RIGHT,icon_rect))
 					{

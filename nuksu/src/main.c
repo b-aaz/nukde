@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>                     // for access, execvp, NULL
 
 #include "./lib/auth.h"                 // for auth
-#include "/root/repo/colibs/bool.h"     // for true, bool, false
+#include "../../colibs/bool.h"     // for true, bool, false
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
