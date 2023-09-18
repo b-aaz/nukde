@@ -35,22 +35,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NK_IMPLEMENTATION
 #define NK_XLIB_IMPLEMENTATION
 #include "../../colibs/nuklear.h"
+#include "../../colibs/nuklear_xlib.h"
+#define  NUERRSTDIO
+#define  NUERRSTDLIB
+#define  NUERRREDEFFUNCS
 #include "../../colibs/err.h"
 #include "../../colibs/bool.h"
 #include "../../colibs/spawn.h"
-#include "../../colibs/nuklear_xlib.h"
 
 #define DTIME           20
 
-static void die (const char * fmt, ...)
-{
-	va_list ap;
-	va_start (ap, fmt);
-	vfprintf (stderr, fmt, ap);
-	va_end (ap);
-	fputs ("\n", stderr);
-	exit (EXIT_FAILURE);
-}
 
 static long timestamp (void)
 {
@@ -74,14 +68,6 @@ static void sleep_for (long t)
 
 	while (-1 == nanosleep (&req, &req));
 }
-
-#ifdef INCLUDE_ALL
-	#define INCLUDE_STYLE
-	#define INCLUDE_CALCULATOR
-	#define INCLUDE_CANVAS
-	#define INCLUDE_OVERVIEW
-	#define INCLUDE_NODE_EDITOR
-#endif
 
 void print_chars (char  * str, size_t strl)
 {
@@ -171,12 +157,21 @@ char * getstdin()
 	buffer[buffersize+2] = '\0';
 	return buffer;
 }
-struct id
+struct arg
 {
-	bool return_id;
-	unsigned int num;
+	bool isset;
+	unsigned int val;
 };
-struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int depth, struct id id)
+struct args
+{
+	unsigned int dp; /* Number of sub-menus deep we are, Starts at 0 . */
+	struct arg x; /* Menu's window x position . */
+	struct arg y; /* Menu's window x position . */
+	unsigned int vp; /* Padding around the left and right edges . */
+	unsigned int hp; /* Padding around the left and right edges . */
+	struct arg id; /* Output the selected items id instead of its name . */
+};
+struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int depth, struct arg id)
 {
 	struct menu_item * head;
 	struct menu_item * prev;
@@ -198,7 +193,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 			{
 				if (current->type==LBL)
 				{
-						--id.num;
+					--id.val;
 				}
 
 				if (*item_count!=0)
@@ -217,13 +212,14 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 							current->namel= (buffer+i)-current->name-1;
 					}
 
-					/*If the current type is a label and it is not already at the start ,move the item to the start of the list */
+					/*If the current type is a label and it is not already at the start, move the item to the start of the list */
 					if (current->type==LBL&&current != head)
 					{
 						current->next=head;
 						head=current;
 						current=prev;
 					}
+
 					/*Creating a new node*/
 					current->next=malloc (sizeof (struct menu_item));
 					prev=current;
@@ -258,7 +254,7 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 					current->type=NRM;
 				}
 
-				current->id=id.num;
+				current->id=id.val;
 				current->name=buffer+i;
 				++*item_count;
 			}
@@ -291,9 +287,9 @@ struct menu_item * parse_buffer (char * buffer,size_t * item_count, unsigned int
 
 		if (buffer[i]=='\n')
 		{
-			if (id.return_id)
+			if (id.isset)
 			{
-				++id.num;
+				++id.val;
 			}
 
 			last_char_was_newline=true;
@@ -343,15 +339,6 @@ float find_max_text_width (struct menu_item * head, XFont * font)
 	current = head;
 	return max_text_width;
 }
-struct args
-{
-	unsigned int dp;
-	unsigned int x;
-	unsigned int y;
-	unsigned int vp;
-	unsigned int hp;
-	struct id id;
-};
 unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 {
 	long ret;
@@ -362,7 +349,7 @@ unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 		return (unsigned int) ret;
 	}
 
-	die ("Invalid number %s",str);
+	die ("%s\n","Invalid number %s",str);
 	return 0;
 }
 struct args parse_args (int argc, char ** argv)
@@ -378,14 +365,14 @@ struct args parse_args (int argc, char ** argv)
 
 			if (strncmp (argv[i], "h",2) ==0)
 			{
-				die ("nukmenu \"[ -h , -x x-pos, -y y-pos, -hp horizontal-padding, -vp vertical-padding, -dp depth]\"");
+				die ("%s\n","nukmenu \"[ -h , -x x-pos, -y y-pos, -hp horizontal-padding, -vp vertical-padding, -dp depth]\"");
 				argc++;
 			}
 			else if (strncmp (argv[i], "dp",2) ==0)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
 				args.dp = strtouint (argv[i+1],NULL,10);
@@ -395,27 +382,29 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.x = strtouint (argv[i+1],NULL,10);
+				args.x.val = strtouint (argv[i+1],NULL,10);
+				args.x.isset=true;
 				i+=2;
 			}
 			else if (strncmp (argv[i], "y",1) ==0)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.y = strtouint (argv[i+1],NULL,10);
+				args.y.val = strtouint (argv[i+1],NULL,10);
+				args.y.isset=true;
 				i+=2;
 			}
 			else if (strncmp (argv[i], "vp",2) ==0)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
 				args.vp = strtouint (argv[i+1],NULL,10);
@@ -425,7 +414,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
 				args.hp = strtouint (argv[i+1],NULL,10);
@@ -435,27 +424,27 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("Option -%s requires a argument",argv[i]);
+					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.id.return_id = true ;
-				args.id.num=strtouint (argv[i+1],NULL,10);
+				args.id.val=strtouint (argv[i+1],NULL,10);
+				args.id.isset= true ;
 				i+=2;
 			}
 			else
 			{
-				die ("Unknown argument -%s \n", argv[i]) ;
+				die ("%s\n","Unknown argument -%s \n", argv[i]) ;
 			}
 		}
 		else
 		{
-			die ("Invalid argument %s \n", argv[i]) ;
+			die ("%s\n","Invalid argument %s \n", argv[i]) ;
 		}
 	}
 
 	return args;
 }
-pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct id id)
+pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct arg id)
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
 	char * args [14];
@@ -477,11 +466,11 @@ pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigne
 	snprintf (args[8], uintdigs, "%u", hp) ;
 	snprintf (args[10], uintdigs, "%u", vp) ;
 
-	if (id.return_id)
+	if (id.isset)
 	{
 		args[11]="-id";
 		args[12]=malloc (uintdigs);
-		snprintf (args[12], uintdigs, "%u", id.num) ;
+		snprintf (args[12], uintdigs, "%u", id.val) ;
 		args[13]=NULL;
 	}
 	else
@@ -496,14 +485,14 @@ pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigne
 	free (args[8]);
 	free (args[10]);
 
-	if (id.return_id)
+	if (id.isset)
 	{
 		free (args[12]);
 	}
 
 	return cpid;
 }
-int launchsubmenu (char * path,char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct id id)
+int launchsubmenu (char * path,char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct arg id)
 {
 	int  fd [2];
 	char ch;
@@ -552,7 +541,7 @@ int main (int argc, char * * argv)
 	unsigned int itemcounter;
 	bool ignoreleave = false ;
 	args=parse_args (argc,argv);
-	current = parse_buffer (getstdin(), &num, args.dp, args.id);
+	current = parse_input (getstdin(), &num, args.dp, args.id);
 	head=current;
 	/* X11 */
 	memset (&xw, 0, sizeof xw);
@@ -560,7 +549,7 @@ int main (int argc, char * * argv)
 
 	if (!xw.dpy)
 	{
-		die ("Could not open a display; perhaps $DISPLAY is not set?");
+		die ("%s\n","Could not open a display; perhaps $DISPLAY is not set?");
 	}
 
 	xw.font = nk_xfont_create (xw.dpy, "fixed");
@@ -581,16 +570,20 @@ int main (int argc, char * * argv)
 
 	if (args.dp==0)
 	{
-		int px, py ;
+		int px, py; /* Pointers xy coordinates . */
 		getcursorpos (xw.dpy,xw.root,&px,&py);
-		args.x+=px-args.hp/2;
-		args.y+=py-args.vp/2;
+		if(!args.x.isset){
+			args.x.val=px-args.hp/2;
+		}
+		if(!args.y.isset){
+			args.y.val=py-args.vp/2;
+		}
 	}
 
-	xw.win = XCreateWindow (xw.dpy, xw.root,args.x,args.y, w, h, 0,
-							XDefaultDepth (xw.dpy, xw.screen), InputOutput,
-							xw.vis, CWEventMask | CWColormap, &xw.swa);
-	XStoreName (xw.dpy, xw.win, "X11");
+	xw.win = XCreateWindow (xw.dpy, xw.root,args.x.val,args.y.val, w, h, 0,
+			XDefaultDepth (xw.dpy, xw.screen), InputOutput,
+			xw.vis, CWEventMask | CWColormap, &xw.swa);
+	XStoreName (xw.dpy, xw.win, "NukMenu");
 	XMapWindow (xw.dpy, xw.win);
 	xw.wm_delete_window = XInternAtom (xw.dpy, "WM_DELETE_WINDOW", False);
 	XSetWMProtocols (xw.dpy, xw.win, &xw.wm_delete_window, 1);
@@ -600,16 +593,7 @@ int main (int argc, char * * argv)
 	/* GUI */
 	ctx = nk_xlib_init (xw.font, xw.dpy, xw.screen, xw.win, xw.width, xw.height);
 #ifdef INCLUDE_STYLE
-	/* ease regression testing during Nuklear release process; not needed for anything else */
-#ifdef STYLE_WHITE
-	set_style (ctx, THEME_WHITE);
-#elif defined(STYLE_RED)
 	set_style (ctx, THEME_RED);
-#elif defined(STYLE_BLUE)
-	set_style (ctx, THEME_BLUE);
-#elif defined(STYLE_DARK)
-	set_style (ctx, THEME_DARK);
-#endif
 #endif
 	ctx->style.window.spacing.y=0;
 	ctx->style.window.padding.y=0;
@@ -662,7 +646,7 @@ int main (int argc, char * * argv)
 
 		/* GUI */
 		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
-					  0))
+					0))
 		{
 			itemcounter = 0 ;
 			nk_layout_row_dynamic (ctx, rowheight, 1);
@@ -679,7 +663,7 @@ int main (int argc, char * * argv)
 					{
 						if (current->type!=MOR)
 						{
-							if (args.id.return_id)
+							if (args.id.isset)
 							{
 								printf ("%u\n", current->id);
 							}
@@ -694,11 +678,11 @@ int main (int argc, char * * argv)
 						{
 							/*We are going to launch a sub-menu*/
 							ignoreleave=true;
-							args.id.num=++current->id;
+							args.id.val=++current->id;
 
-							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,args.x+w,args.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
+							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,args.x.val+w,args.y.val+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
 							{
-								exit (EXIT_SUCCESS);
+								goto cleanup;
 							}
 						}
 					}
