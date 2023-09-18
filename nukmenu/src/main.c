@@ -108,14 +108,14 @@ enum  item_type { NRM =0, LBL =1, IMG =2,MOR=3};
 struct menu_item
 {
 	enum item_type type;
+	unsigned int id;
+	size_t submenu_textl;
 	size_t namel;
+	size_t icpathl;
 	char * name;
 	int * icon;
-	size_t icpathl;
 	char * icpath;
 	char * submenu_text;
-	size_t submenu_textl;
-	unsigned int id;
 	struct menu_item * next ;
 };
 enum item_type detect_type (char * type)
@@ -510,18 +510,22 @@ int launchsubmenu (char * path,char * submenutext, size_t submenutextl,unsigned 
 void getcursorpos (Display * dpy, Window root, int * x,int * y)
 {
 	/* Oh look at what we got here!!!
-	 * this function will stay here to be a
-	 * monument for the stupidity of some "programmers"
 	 * 5 use less variables just to get a simple cursor position
 	 */
-	Window   useless_variable_cause_xlib_sucks1;
-	Window  useless_variable_cause_xlib_sucks2;
-	int  useless_variable_cause_xlib_sucks3;
-	int  useless_variable_cause_xlib_sucks4;
-	unsigned int  useless_variable_cause_xlib_sucks5;
-	XQueryPointer (dpy,root,&useless_variable_cause_xlib_sucks1,&useless_variable_cause_xlib_sucks2,x,y,&useless_variable_cause_xlib_sucks3,&useless_variable_cause_xlib_sucks4,&useless_variable_cause_xlib_sucks5);
-	/* if you know a better way to do this DO it and tell me */
+	Window   useless_variable1;
+	Window  useless_variable2;
+	int  useless_variable3;
+	int  useless_variable4;
+	unsigned int  useless_variable5;
+	XQueryPointer (dpy,root,&useless_variable1,&useless_variable2,x,y,&useless_variable3,&useless_variable4,&useless_variable5);
+	/* if you know a better way to do this tell me */
 }
+struct menu_window {
+	unsigned int x;
+	unsigned int y;
+	unsigned int w;
+	unsigned int h;
+};
 int main (int argc, char * * argv)
 {
 	long dt;
@@ -535,11 +539,11 @@ int main (int argc, char * * argv)
 	float max_text_width=0;
 	float width;
 	float rowheight;
-	float w,h;
 	struct nk_color;
 	struct args args ;
 	unsigned int itemcounter;
 	bool ignoreleave = false ;
+	struct menu_window menuwin;
 	args=parse_args (argc,argv);
 	current = parse_input (getstdin(), &num, args.dp, args.id);
 	head=current;
@@ -555,8 +559,8 @@ int main (int argc, char * * argv)
 	xw.font = nk_xfont_create (xw.dpy, "fixed");
 	max_text_width = find_max_text_width (head, xw.font);
 	rowheight=xw.font->height+args.vp;
-	w=max_text_width+args.hp;
-	h=num*rowheight;
+	menuwin.w=max_text_width+args.hp;
+	menuwin.h=num*rowheight;
 	xw.root = DefaultRootWindow (xw.dpy);
 	xw.screen = XDefaultScreen (xw.dpy);
 	xw.vis = XDefaultVisual (xw.dpy, xw.screen);
@@ -570,17 +574,33 @@ int main (int argc, char * * argv)
 
 	if (args.dp==0)
 	{
-		int px, py; /* Pointers xy coordinates . */
+		unsigned int dw ,dh;  /* Display width and height . */
+		dh=DisplayHeight(xw.dpy,xw.screen);
+		dw=DisplayWidth(xw.dpy,xw.screen);
+		int px, py; /* Pointers x y coordinates . */
 		getcursorpos (xw.dpy,xw.root,&px,&py);
 		if(!args.x.isset){
-			args.x.val=px-args.hp/2;
+			menuwin.x=px;
+			/* Negatively offsetting the x position by the
+			 * horizontal padding to put the window slightly under
+			 * the cursor . */
+			menuwin.x-=args.hp/2;  
 		}
 		if(!args.y.isset){
-			args.y.val=py-args.vp/2;
+			menuwin.y=py;
+			menuwin.y-=args.vp/2;
+		}
+		if(menuwin.y+menuwin.h>dh){
+			menuwin.y-=menuwin.h;
+			menuwin.y+=args.vp;
+		}
+		if(menuwin.x+menuwin.w>dw){
+			menuwin.x-=menuwin.w;
+			menuwin.x+=args.hp;  
 		}
 	}
 
-	xw.win = XCreateWindow (xw.dpy, xw.root,args.x.val,args.y.val, w, h, 0,
+	xw.win = XCreateWindow (xw.dpy, xw.root,menuwin.x,menuwin.y, menuwin.w, menuwin.h, 0,
 			XDefaultDepth (xw.dpy, xw.screen), InputOutput,
 			xw.vis, CWEventMask | CWColormap, &xw.swa);
 	XStoreName (xw.dpy, xw.win, "NukMenu");
@@ -645,7 +665,7 @@ int main (int argc, char * * argv)
 		nk_input_end (ctx);
 
 		/* GUI */
-		if (nk_begin (ctx, "", nk_rect (0, 0,w,h),
+		if (nk_begin (ctx, "", nk_rect (0, 0,menuwin.w,menuwin.h),
 					0))
 		{
 			itemcounter = 0 ;
@@ -680,7 +700,7 @@ int main (int argc, char * * argv)
 							ignoreleave=true;
 							args.id.val=++current->id;
 
-							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,args.x.val+w,args.y.val+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
+							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,menuwin.x+menuwin.w,menuwin.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
 							{
 								goto cleanup;
 							}
