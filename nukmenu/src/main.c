@@ -171,6 +171,22 @@ struct args
 	unsigned int hp; /* Padding around the left and right edges . */
 	struct arg id; /* Output the selected items id instead of its name . */
 };
+void set_name_length (char * buffer,size_t offset, struct menu_item * item)
+{
+	switch (item->type)
+	{
+		case IMG:
+			item->icpathl= (buffer+offset)-item->icpath-1;
+			break;
+
+		case MOR:
+			item->submenu_textl= (buffer+offset)-item->submenu_text-1;
+			break;
+
+		default:
+			item->namel= (buffer+offset)-item->name-1;
+	}
+}
 struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int depth, struct arg id)
 {
 	struct menu_item * head;
@@ -198,44 +214,28 @@ struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int 
 
 				if (*item_count!=0)
 				{
-					switch (current->type)
+					set_name_length (buffer,i,current);
+
+					/* Skips extra newlines . */
+					if (buffer[i]=='\n')
 					{
-						case IMG:
-							current->icpathl= (buffer+i)-current->icpath-1;
+						i++;
+
+						while (buffer[i]=='\n')
+						{
+							i++;
+						}
+
+						if (buffer[i]=='\0')
+						{
 							break;
-
-						case MOR:
-							current->submenu_textl= (buffer+i)-current->submenu_text-1;
-							break;
-
-						default:
-							current->namel= (buffer+i)-current->name-1;
-					}
-
-					/*If the current type is a label and it is not already at the start, move the item to the start of the list */
-					if (current->type==LBL&&current != head)
-					{
-						current->next=head;
-						head=current;
-						current=prev;
+						}
 					}
 
 					/*Creating a new node*/
 					current->next=malloc (sizeof (struct menu_item));
 					prev=current;
 					current=current->next;
-				}
-
-				if (buffer[i]=='\n')
-				{
-					do
-					{
-						i++;
-					}
-					while (buffer[i]=='\n');
-
-					if (buffer[i]=='\0')
-					{break;}
 				}
 
 				i+=depth;
@@ -294,9 +294,11 @@ struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int 
 
 			last_char_was_newline=true;
 
-			if (current -> type != MOR)
+			if (current->type != MOR)
 			{
 				buffer[i]='\0';
+				i++;
+				continue;
 			}
 		}
 		else
@@ -349,7 +351,7 @@ unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 		return (unsigned int) ret;
 	}
 
-	die ("%s\n","Invalid number %s",str);
+	die ("%s%s\n","Invalid number ",str);
 	return 0;
 }
 struct args parse_args (int argc, char ** argv)
@@ -520,12 +522,48 @@ void getcursorpos (Display * dpy, Window root, int * x,int * y)
 	XQueryPointer (dpy,root,&useless_variable1,&useless_variable2,x,y,&useless_variable3,&useless_variable4,&useless_variable5);
 	/* if you know a better way to do this tell me */
 }
-struct menu_window {
-	unsigned int x;
-	unsigned int y;
+struct menu_window
+{
+	int x;
+	int y;
 	unsigned int w;
 	unsigned int h;
 };
+/* Disables the window manager decorations . */
+void disable_border (struct XWindow xw)
+{
+	struct motif_hints
+	{
+		unsigned long flags;
+		unsigned long funcs;
+		unsigned long decor;
+		long input_mode;
+		unsigned long stats;
+	};
+	struct motif_hints hints;
+	Atom property;
+	hints.flags=2;
+	hints.decor=0;
+	property=XInternAtom (xw.dpy,"_MOTIF_WM_HINTS",False);
+	XChangeProperty (xw.dpy,xw.win,property,property
+					 ,32,PropModeReplace, (unsigned char *) &hints,5);
+}
+void reverse_list (struct menu_item ** head)
+{
+	struct menu_item * current=*head;
+struct menu_item * tempnext= (*head);
+	struct menu_item * prev=NULL;
+
+	while (current!=NULL)
+	{
+		tempnext=current->next;
+		current->next=prev;
+		prev=current;
+		current=tempnext;
+	}
+
+	*head=prev;
+}
 int main (int argc, char * * argv)
 {
 	long dt;
@@ -574,36 +612,53 @@ int main (int argc, char * * argv)
 
 	if (args.dp==0)
 	{
-		unsigned int dw ,dh;  /* Display width and height . */
-		dh=DisplayHeight(xw.dpy,xw.screen);
-		dw=DisplayWidth(xw.dpy,xw.screen);
+		unsigned int dw,dh;   /* Display width and height . */
+		dh=DisplayHeight (xw.dpy,xw.screen);
+		dw=DisplayWidth (xw.dpy,xw.screen);
 		int px, py; /* Pointers x y coordinates . */
 		getcursorpos (xw.dpy,xw.root,&px,&py);
-		if(!args.x.isset){
+
+		if (!args.x.isset)
+		{
 			menuwin.x=px;
 			/* Negatively offsetting the x position by the
 			 * horizontal padding to put the window slightly under
 			 * the cursor . */
-			menuwin.x-=args.hp/2;  
+			menuwin.x-=args.hp/2;
 		}
-		if(!args.y.isset){
+
+		if (!args.y.isset)
+		{
 			menuwin.y=py;
 			menuwin.y-=args.vp/2;
 		}
-		if(menuwin.y+menuwin.h>dh){
+
+		if (menuwin.y+menuwin.h>dh)
+		{
+			/* Reverses the list of items if the menu spawns on the
+			 * top of cursor . */
+			reverse_list (&head);
 			menuwin.y-=menuwin.h;
 			menuwin.y+=args.vp;
 		}
-		if(menuwin.x+menuwin.w>dw){
+
+		if (menuwin.x+menuwin.w>dw)
+		{
 			menuwin.x-=menuwin.w;
-			menuwin.x+=args.hp;  
+			menuwin.x+=args.hp;
 		}
+	}
+	else
+	{
+		menuwin.x=args.x.val;
+		menuwin.y=args.y.val;
 	}
 
 	xw.win = XCreateWindow (xw.dpy, xw.root,menuwin.x,menuwin.y, menuwin.w, menuwin.h, 0,
-			XDefaultDepth (xw.dpy, xw.screen), InputOutput,
-			xw.vis, CWEventMask | CWColormap, &xw.swa);
+							XDefaultDepth (xw.dpy, xw.screen), InputOutput,
+							xw.vis, CWEventMask | CWColormap, &xw.swa);
 	XStoreName (xw.dpy, xw.win, "NukMenu");
+	disable_border (xw);
 	XMapWindow (xw.dpy, xw.win);
 	xw.wm_delete_window = XInternAtom (xw.dpy, "WM_DELETE_WINDOW", False);
 	XSetWMProtocols (xw.dpy, xw.win, &xw.wm_delete_window, 1);
@@ -666,7 +721,7 @@ int main (int argc, char * * argv)
 
 		/* GUI */
 		if (nk_begin (ctx, "", nk_rect (0, 0,menuwin.w,menuwin.h),
-					0))
+					  0))
 		{
 			itemcounter = 0 ;
 			nk_layout_row_dynamic (ctx, rowheight, 1);
@@ -700,7 +755,24 @@ int main (int argc, char * * argv)
 							ignoreleave=true;
 							args.id.val=++current->id;
 
-							if (WEXITSTATUS (launchsubmenu (argv[0],current->submenu_text,current->submenu_textl,args.dp+1,menuwin.x+menuwin.w,menuwin.y+itemcounter*rowheight,args.hp,args.vp,args.id)) ==EXIT_SUCCESS)
+							if (
+								WEXITSTATUS
+								(
+									launchsubmenu
+									(
+										argv[0],
+										current->submenu_text,
+										current->submenu_textl,
+										args.dp+1
+										,menuwin.x+menuwin.w,
+										menuwin.y+itemcounter*rowheight,
+										args.hp,
+										args.vp,
+										args.id
+									)
+								)
+								==EXIT_SUCCESS
+							)
 							{
 								goto cleanup;
 							}
