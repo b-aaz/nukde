@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ICON_WIDGET
-	#define ICON_WIDGET
+#ifndef ICON_WIDGET_H
+	#define ICON_WIDGET_H
 
 #include "fileinfo_type.h"
 

@@ -14,8 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#ifndef AUTH
-	#define AUTH
+#ifndef AUTH_H
+	#define AUTH_H
 
 enum auth_return
 {

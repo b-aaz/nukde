@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef NUSORT
-	#define NUSORT
+#ifndef NUSORT_H
+	#define NUSORT_H
 
 
 int strnucmp(const char * str1,const char * str2);

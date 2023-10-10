@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef FILEINFO_TYPE
-#define FILEINFO_TYPE
+#ifndef FILEINFO_TYPE_H
+#define FILEINFO_TYPE_H
 
 
 #include <sys/event.h>

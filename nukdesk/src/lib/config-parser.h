@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CONFIG_PARSER
-	#define CONFIG_PARSER
+#ifndef CONFIG_PARSER_H
+	#define CONFIG_PARSER_H
 
 char * get_config(char * data, char * pattern,char * bigpattern,enum icon_type * type);
 

@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef FILEOPS
-	#define FILEOPS
+#ifndef FILEOPS_H
+	#define FILEOPS_H
 
 #include <dirent.h>                     /* for DIR*/
 #include <magic.h>                      /* for magic_t*/

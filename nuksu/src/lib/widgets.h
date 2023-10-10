@@ -14,8 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#ifndef WIDGETS
-	#define WIDGETS
+#ifndef WIDGETS_H
+	#define WIDGETS_H
 
 
 struct password

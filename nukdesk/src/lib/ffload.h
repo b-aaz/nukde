@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef FFLOAD
-	#define FFLOAD
+#ifndef FFLOAD_H
+	#define FFLOAD_H
 
 
 unsigned char * ffread(FILE * file,unsigned int * w,unsigned int * h);

@@ -14,8 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#ifndef STRRMADD
-	#define STRRMADD
+#ifndef STRRMADD_H
+	#define STRRMADD_H
 
 char *strrm(char * str,size_t strl,size_t idx,int num);
 char *stradd(char * str,int strl,char * stradd,int straddl,int idx);

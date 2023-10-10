@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ICON_LOADER
-	#define ICON_LOADER
+#ifndef ICON_LOADER_H
+	#define ICON_LOADER_H
 
 
 unsigned char * read_buffer_resize_open(char * path,long int image_r_w,long int image_r_h);
