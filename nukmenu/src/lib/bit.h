@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # include<stdio.h>
 #include<stdlib.h>
 #include <limits.h>
-#define getbit(x,i) ((x[i/CHAR_BIT])>>(i%CHAR_BIT))&(1)
+#define getbit(x,i) (((x[i/CHAR_BIT])>>(i%CHAR_BIT))&(1))
 #define setbit(x,i,v) 				\
 x[i/CHAR_BIT] = 				\
 ( 						\
@@ -34,6 +34,20 @@ x[i/CHAR_BIT] = 				\
 	       	| (v<<(i%CHAR_BIT))		\
 	       					\
 )						\
+
+static size_t countbitsset ( unsigned char * x , size_t bytes)
+{
+	size_t count=0;
+	for (size_t byte=0; byte < bytes;byte++)
+	{
+		unsigned char b = x[byte];
+		for (;b;count++)
+		{
+			b&=b-1;
+		}
+	}
+	return count;
+}
 
 static void printbyte(unsigned char byte){
 	char i=0;

@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NK_IMPLEMENTATION
 #define NK_XLIB_IMPLEMENTATION
 #include "../../colibs/nuklear.h"
+#include "./lib/bit.h"
 #include "../../colibs/nuklear_xlib.h"
 #define  NUERRSTDIO
 #define  NUERRSTDLIB
@@ -67,41 +68,6 @@ static void sleep_for (long t)
 	req.tv_nsec = ms * 1000000L;
 
 	while (-1 == nanosleep (&req, &req));
-}
-
-void print_chars (char  * str, size_t strl)
-{
-	size_t i = 0 ;
-	printf ("<START>\n_______\n");
-
-	while (i < strl)
-	{
-		switch (str[i])
-		{
-			case '\n' :
-				printf ("<newline>");
-				break ;
-
-			case '\0' :
-				printf ("<NULL>");
-				break ;
-
-			case '\t' :
-				printf ("<Tab>");
-				break ;
-
-			case ' ' :
-				printf ("<Space>");
-				break ;
-
-			default :
-				printf ("%c", str[i]);
-		}
-
-		i++;
-	}
-
-	printf ("\n_______\n<END>\n");
 }
 
 enum  item_type { NRM =0, LBL =1, IMG =2,MOR=3};
@@ -157,19 +123,37 @@ char * getstdin()
 	buffer[buffersize+2] = '\0';
 	return buffer;
 }
-struct arg
+enum argnnums
 {
-	bool isset;
-	unsigned int val;
+	ARGN_DP,
+	ARGN_X,
+	ARGN_Y,
+	ARGN_VP,
+	ARGN_HP,
+	ARGN_ID,
 };
+
+static const char * argnames[6]= {"-dp","-x","-y","-vp","-hp","-id"};
+
+union argsints
+{
+	struct
+	{
+		unsigned int dp; /* Number of sub-menus deep we are, Starts at 0 . */
+		int x; /* Menu's window x position . */
+		int y; /* Menu's window x position . */
+		unsigned int vp; /* Padding around the left and right edges . */
+		unsigned int hp; /* Padding around the left and right edges . */
+		unsigned int id; /* Output the selected items id instead of its name . */
+	};
+	int a [sizeof (argnames) /sizeof (argnames[0])];
+};
+
 struct args
 {
-	unsigned int dp; /* Number of sub-menus deep we are, Starts at 0 . */
-	struct arg x; /* Menu's window x position . */
-	struct arg y; /* Menu's window x position . */
-	unsigned int vp; /* Padding around the left and right edges . */
-	unsigned int hp; /* Padding around the left and right edges . */
-	struct arg id; /* Output the selected items id instead of its name . */
+	union argsints v;
+	unsigned char argset [1]; /* Each bit indicates if the argument is
+				     given . */
 };
 void set_name_length (char * buffer,size_t offset, struct menu_item * item)
 {
@@ -187,7 +171,7 @@ void set_name_length (char * buffer,size_t offset, struct menu_item * item)
 			item->namel= (buffer+offset)-item->name-1;
 	}
 }
-struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int depth, struct arg id)
+struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int depth, unsigned int id,unsigned char * argset)
 {
 	struct menu_item * head;
 	struct menu_item * prev;
@@ -209,7 +193,7 @@ struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int 
 			{
 				if (current->type==LBL)
 				{
-					--id.val;
+					--id;
 				}
 
 				if (*item_count!=0)
@@ -254,7 +238,7 @@ struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int 
 					current->type=NRM;
 				}
 
-				current->id=id.val;
+				current->id=id;
 				current->name=buffer+i;
 				++*item_count;
 			}
@@ -287,9 +271,9 @@ struct menu_item * parse_input (char * buffer,size_t * item_count, unsigned int 
 
 		if (buffer[i]=='\n')
 		{
-			if (id.isset)
+			if (getbit (argset,ARGN_ID))
 			{
-				++id.val;
+				++id;
 			}
 
 			last_char_was_newline=true;
@@ -377,7 +361,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.dp = strtouint (argv[i+1],NULL,10);
+				args.v.dp = strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_DP,1);
 				i+=2;
 			}
 			else if (strncmp (argv[i], "x",1) ==0)
@@ -387,8 +372,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.x.val = strtouint (argv[i+1],NULL,10);
-				args.x.isset=true;
+				args.v.x = strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_X,1);
 				i+=2;
 			}
 			else if (strncmp (argv[i], "y",1) ==0)
@@ -398,8 +383,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.y.val = strtouint (argv[i+1],NULL,10);
-				args.y.isset=true;
+				args.v.y = strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_Y,1);
 				i+=2;
 			}
 			else if (strncmp (argv[i], "vp",2) ==0)
@@ -409,7 +394,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.vp = strtouint (argv[i+1],NULL,10);
+				args.v.vp = strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_VP,1);
 				i+=2;
 			}
 			else if (strncmp (argv[i], "hp",2) ==0)
@@ -419,7 +405,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.hp = strtouint (argv[i+1],NULL,10);
+				args.v.hp = strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_HP,1);
 				i+=2;
 			}
 			else if (strncmp (argv[i], "id",2) ==0)
@@ -429,8 +416,8 @@ struct args parse_args (int argc, char ** argv)
 					die ("%s\n","Option -%s requires a argument",argv[i]);
 				}
 
-				args.id.val=strtouint (argv[i+1],NULL,10);
-				args.id.isset= true ;
+				args.v.id=strtouint (argv[i+1],NULL,10);
+				setbit (args.argset,ARGN_ID,1);
 				i+=2;
 			}
 			else
@@ -440,66 +427,40 @@ struct args parse_args (int argc, char ** argv)
 		}
 		else
 		{
-			die ("%s\n","Invalid argument %s \n", argv[i]) ;
+			die ("Invalid argument %s \n", argv[i]) ;
 		}
 	}
 
 	return args;
 }
-pid_t spawnmenu (char * path, int * fd, unsigned int dp, unsigned int x, unsigned int y, unsigned int hp, unsigned int vp, struct arg id)
+pid_t spawnmenu (char * path, int * fd, struct args args)
 {
 	unsigned char uintdigs = 3 * sizeof (unsigned int) +1  ;
-	char * args [14];
+	unsigned char argsetbytes = sizeof (argnames) /sizeof (argnames[0]) /8+1;
+	size_t setcount = countbitsset (args.argset, argsetbytes);
+	unsigned char spwargsc = setcount*2;
+	char * spwargs[spwargsc];
 	pid_t cpid;
-	args[0] = path ;
-	args[1] = "-dp";
-	args[3] = "-x";
-	args[5] = "-y";
-	args[7] = "-hp";
-	args[9] = "-vp";
-	args[2] = malloc (uintdigs);
-	args[4] = malloc (uintdigs);
-	args[6] = malloc (uintdigs);
-	args[8] = malloc (uintdigs);
-	args[10] = malloc (uintdigs);
-	snprintf (args[2], uintdigs, "%u", dp) ;
-	snprintf (args[4], uintdigs, "%u", x) ;
-	snprintf (args[6], uintdigs, "%u", y) ;
-	snprintf (args[8], uintdigs, "%u", hp) ;
-	snprintf (args[10], uintdigs, "%u", vp) ;
+	spwargs[0]=path;
+	spwargs[spwargsc-1]=NULL;
 
-	if (id.isset)
+	for (unsigned char i=1; i<spwargsc-1; i++)
 	{
-		args[11]="-id";
-		args[12]=malloc (uintdigs);
-		snprintf (args[12], uintdigs, "%u", id.val) ;
-		args[13]=NULL;
-	}
-	else
-	{
-		args[11]=NULL;
+		spwargs[i] = argnames[(i-1)/2];
+		i++;
+		spwargs[i] = alloca (uintdigs);
+		snprintf (spwargs[i], uintdigs, "%u", args.v.a[(i-2)/2]) ;
 	}
 
-	cpid=spawn (args, fd, SPAWN_RW) ;
-	free (args[2]);
-	free (args[4]);
-	free (args[6]);
-	free (args[8]);
-	free (args[10]);
-
-	if (id.isset)
-	{
-		free (args[12]);
-	}
-
+	cpid=spawn (spwargs, fd, SPAWN_RW) ;
 	return cpid;
 }
-int launchsubmenu (char * path,char * submenutext, size_t submenutextl,unsigned int depth, unsigned int x,unsigned int y,unsigned int hp, unsigned int vp, struct arg id)
+int launchsubmenu (char * path,char * submenutext, size_t submenutextl, struct args subargs)
 {
 	int  fd [2];
 	char ch;
 	int stat;
-	spawnmenu (path,fd,depth,x,y,hp,vp,id) ;
+	spawnmenu (path,fd,subargs) ;
 	write (fd[1],submenutext,  submenutextl) ;
 	close (fd[1]) ;
 	wait (&stat) ;
@@ -578,12 +539,12 @@ int main (int argc, char * * argv)
 	float width;
 	float rowheight;
 	struct nk_color;
-	struct args args ;
+	struct args args= {0};
 	unsigned int itemcounter;
 	bool ignoreleave = false ;
-	struct menu_window menuwin;
+	struct menu_window menuwin= {0};
 	args=parse_args (argc,argv);
-	current = parse_input (getstdin(), &num, args.dp, args.id);
+	current = parse_input (getstdin(), &num, args.v.dp, args.v.id,args.argset);
 	head=current;
 	/* X11 */
 	memset (&xw, 0, sizeof xw);
@@ -596,8 +557,8 @@ int main (int argc, char * * argv)
 
 	xw.font = nk_xfont_create (xw.dpy, "fixed");
 	max_text_width = find_max_text_width (head, xw.font);
-	rowheight=xw.font->height+args.vp;
-	menuwin.w=max_text_width+args.hp;
+	rowheight=xw.font->height+args.v.vp;
+	menuwin.w=max_text_width+args.v.hp;
 	menuwin.h=num*rowheight;
 	xw.root = DefaultRootWindow (xw.dpy);
 	xw.screen = XDefaultScreen (xw.dpy);
@@ -610,7 +571,7 @@ int main (int argc, char * * argv)
 		Button1MotionMask | Button3MotionMask | Button4MotionMask | Button5MotionMask|
 		PointerMotionMask | KeymapStateMask;
 
-	if (args.dp==0)
+	if (args.v.dp==0)
 	{
 		unsigned int dw,dh;   /* Display width and height . */
 		dh=DisplayHeight (xw.dpy,xw.screen);
@@ -618,40 +579,48 @@ int main (int argc, char * * argv)
 		int px, py; /* Pointers x y coordinates . */
 		getcursorpos (xw.dpy,xw.root,&px,&py);
 
-		if (!args.x.isset)
+		if (!getbit (args.argset,ARGN_X))
 		{
 			menuwin.x=px;
 			/* Negatively offsetting the x position by the
 			 * horizontal padding to put the window slightly under
 			 * the cursor . */
-			menuwin.x-=args.hp/2;
+			menuwin.x-=args.v.hp/2;
+
+			if (menuwin.x+menuwin.w>dw)
+			{
+				menuwin.x-=menuwin.w;
+				menuwin.x+=args.v.hp;
+			}
+		}
+		else
+		{
+			menuwin.x=args.v.x;
 		}
 
-		if (!args.y.isset)
+		if (!getbit (args.argset,ARGN_Y))
 		{
 			menuwin.y=py;
-			menuwin.y-=args.vp/2;
-		}
+			menuwin.y-=args.v.vp/2;
 
-		if (menuwin.y+menuwin.h>dh)
-		{
-			/* Reverses the list of items if the menu spawns on the
-			 * top of cursor . */
-			reverse_list (&head);
-			menuwin.y-=menuwin.h;
-			menuwin.y+=args.vp;
+			if (menuwin.y+menuwin.h>dh)
+			{
+				/* Reverses the list of items if the menu spawns on the
+				 * top of cursor . */
+				reverse_list (&head);
+				menuwin.y-=menuwin.h;
+				menuwin.y+=args.v.vp;
+			}
 		}
-
-		if (menuwin.x+menuwin.w>dw)
+		else
 		{
-			menuwin.x-=menuwin.w;
-			menuwin.x+=args.hp;
+			menuwin.y=args.v.y;
 		}
 	}
 	else
 	{
-		menuwin.x=args.x.val;
-		menuwin.y=args.y.val;
+		menuwin.x=args.v.x;
+		menuwin.y=args.v.y;
 	}
 
 	xw.win = XCreateWindow (xw.dpy, xw.root,menuwin.x,menuwin.y, menuwin.w, menuwin.h, 0,
@@ -738,7 +707,7 @@ int main (int argc, char * * argv)
 					{
 						if (current->type!=MOR)
 						{
-							if (args.id.isset)
+							if (getbit (args.argset,ARGN_ID))
 							{
 								printf ("%u\n", current->id);
 							}
@@ -751,9 +720,17 @@ int main (int argc, char * * argv)
 						}
 						else
 						{
+							struct args subargs={0};
+							subargs.v.dp=args.v.dp+1;
+							subargs.v.x=menuwin.x+menuwin.w;
+							subargs.v.y=menuwin.y+itemcounter*rowheight;
+							subargs.v.vp=args.v.vp;
+							subargs.v.hp=args.v.hp;
+							subargs.v.id=args.v.id;
+							subargs.argset[0]= 63;
 							/*We are going to launch a sub-menu*/
 							ignoreleave=true;
-							args.id.val=++current->id;
+							args.v.id=++current->id;
 
 							if (
 								WEXITSTATUS
@@ -763,12 +740,7 @@ int main (int argc, char * * argv)
 										argv[0],
 										current->submenu_text,
 										current->submenu_textl,
-										args.dp+1
-										,menuwin.x+menuwin.w,
-										menuwin.y+itemcounter*rowheight,
-										args.hp,
-										args.vp,
-										args.id
+										subargs
 									)
 								)
 								==EXIT_SUCCESS
