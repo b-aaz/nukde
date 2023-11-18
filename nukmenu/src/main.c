@@ -49,7 +49,7 @@
 #define NK_IMPLEMENTATION
 #define NK_XLIB_IMPLEMENTATION
 #include "../../colibs/nuklear.h"
-#include "./lib/bit.h"
+#include "../../colibs/bit.h"
 #include "../../colibs/nuklear_xlib.h"
 #define  NUERRSTDIO
 #define  NUERRSTDLIB
