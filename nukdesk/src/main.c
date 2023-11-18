@@ -573,7 +573,7 @@ int main (void)
 			struct id id ;
 			id.return_id=true;
 			id.num=0;
-			spawnmenu (menu.fd,0,0,0, 10, 10, id);
+			spawnmenu (menu.fd,0,ctx->input.mouse.pos.x,ctx->input.mouse.pos.y, 10, 10, id);
 			fcntl (menu.fd[0],O_NONBLOCK);
 			write (menu.fd[1], MENUINPUT, MENUINPUTLEN) ;
 
