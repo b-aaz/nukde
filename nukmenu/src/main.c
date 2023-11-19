@@ -372,7 +372,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.dp = strtouint (argv[i+1],NULL,10);
@@ -383,7 +383,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.x = strtouint (argv[i+1],NULL,10);
@@ -394,7 +394,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.y = strtouint (argv[i+1],NULL,10);
@@ -405,7 +405,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.vp = strtouint (argv[i+1],NULL,10);
@@ -416,7 +416,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.hp = strtouint (argv[i+1],NULL,10);
@@ -427,7 +427,7 @@ struct args parse_args (int argc, char ** argv)
 			{
 				if (i+1>=argc)
 				{
-					die ("%s\n","Option -%s requires a argument",argv[i]);
+					die ("Option -%s requires a argument",argv[i]);
 				}
 
 				args.v.id=strtouint (argv[i+1],NULL,10);
@@ -436,7 +436,7 @@ struct args parse_args (int argc, char ** argv)
 			}
 			else
 			{
-				die ("%s\n","Unknown argument -%s \n", argv[i]) ;
+				die ("Unknown argument -%s \n", argv[i]) ;
 			}
 		}
 		else
