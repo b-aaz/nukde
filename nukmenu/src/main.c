@@ -740,11 +740,11 @@ int main (int argc, char * * argv)
 							subargs.v.y=menuwin.y+itemcounter*rowheight;
 							subargs.v.vp=args.v.vp;
 							subargs.v.hp=args.v.hp;
+							args.v.id=++current->id;
 							subargs.v.id=args.v.id;
-							subargs.argset[0]= 63;
+							subargs.argset[0]= 127;
 							/*We are going to launch a sub-menu*/
 							ignoreleave=true;
-							args.v.id=++current->id;
 
 							if (
 								WEXITSTATUS
