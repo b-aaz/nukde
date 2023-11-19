@@ -26,7 +26,7 @@ $(BINDIR)ffload.o:$(LIBS)ffload.c $(LIBS)ffload.h $(COLIBS)err.h
 $(BINDIR)config-parser.o:$(LIBS)config-parser.c $(LIBS)config-parser.h $(COLIBS)err.h 
 	$(MAKEDIR)
 		cc -c  $(LIBS)config-parser.c  $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)fileops.o:$(LIBS)fileops.c $(LIBS)fileops.h $(COLIBS)err.h $(COLIBS)bool.h  $(LIBS)ffload.h $(LIBS)config-parser.h
+$(BINDIR)fileops.o:$(LIBS)fileops.c $(LIBS)fileops.h $(COLIBS)err.h $(COLIBS)bool.h  $(LIBS)ffload.h $(LIBS)config-parser.h $(LIBS)fileinfo_type.h 
 	$(MAKEDIR)
 		cc -c  $(LIBS)fileops.c  $(LIBCFLAGS) $(CFLAGS) -o $@
 $(BINDIR)icon-widget.o:$(LIBS)icon-widget.c $(LIBS)icon-widget.h $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)nuklear.h

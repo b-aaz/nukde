@@ -112,7 +112,8 @@ enum items
 	MENU_ST_CREATION_DATE = 7 ,
 	MENU_ST_ACCESS_DATE = 8 ,
 	MENU_TOGGAC = 9,
-	MENU_TOGGCFG = 10,
+	MENU_TOGGHIDDEN = 10,
+	MENU_TOGGCFG = 11,
 };
 unsigned int  strtouint (char * str,char ** restrict endptr,int b)
 {
@@ -409,10 +410,12 @@ struct  nk_font * addfont (const char * font_path,float height, const struct  nk
 
 	if (font_path!=NULL)
 	{
-		struct nk_font * future = nk_font_atlas_add_from_file (atlas,font_path, height, cfg);
+		struct nk_font * font = nk_font_atlas_add_from_file (atlas,font_path, height, cfg);
+		return font;
 	}
 
 	nk_x11_font_stash_end();
+	return NULL;
 }
 
 struct nk_context * init_window (struct XWindow * xwin, GLXContext * glContext)
@@ -452,6 +455,7 @@ int main (void)
 	unsigned int fnum=0;
 	struct grid_config grid_cfg;
 	bool show_gridcfg_menu = false;
+	bool view_hidden = false;
 	time_t time_of_last_frame ;
 	time_t time_of_now ;
 #ifdef  DEBUG
@@ -585,6 +589,15 @@ int main (void)
 			write (menu.fd[1],",descending\n", 12) ;
 				 
 			}
+			if (view_hidden)
+			{
+				write (menu.fd[1],"hide", 4) ;
+			}
+			else
+			{
+				write (menu.fd[1],"show", 4) ;
+			}
+			write (menu.fd[1]," hidden files\n",14);
 			if (show_gridcfg_menu)
 			{
 				write (menu.fd[1],"disable", 7) ;
@@ -628,7 +641,7 @@ int main (void)
 								case MENU_REMOVE :
 									while (sif<fnum)
 									{
-										if (files[sif]->isselected==true)
+										if (getbit(files[sif]->flags,F_SELECTED)==true)
 										{
 											remove (files[sif]->path);
 										}
@@ -641,7 +654,7 @@ int main (void)
 								case MENU_OPEN :
 									while (sif<fnum)
 									{
-										if (files[sif]->isselected==true)
+										if (getbit(files[sif]->flags,F_SELECTED)==true)
 										{
 											launch (opencfg,*files[sif]);
 										}
@@ -651,6 +664,9 @@ int main (void)
 
 									break;
 
+								case MENU_TOGGHIDDEN :
+									view_hidden=!view_hidden;
+									break;
 								case MENU_TOGGCFG :
 									show_gridcfg_menu=!show_gridcfg_menu;
 									break;
@@ -667,7 +683,7 @@ int main (void)
 
 						while (sif<fnum)
 						{
-							files[sif]->isselected=false;
+							setbit(files[sif]->flags,F_SELECTED,false);
 							sif++;
 						}
 
@@ -697,7 +713,7 @@ int main (void)
 			unsigned int col;
 			unsigned int max_colomns;
 			float colomn_pad ;
-			unsigned int  icon_num;
+			unsigned int  icon_num=0;
 			struct nk_rect icon_rect ;
 			time_of_last_frame = time_of_now;
 			time_of_now = time(NULL);
@@ -727,9 +743,13 @@ int main (void)
 			{
 				col=0;
 
-				while (col+ (row*max_colomns) <fnum && col<max_colomns)
+				while (icon_num <fnum && col<max_colomns)
 				{
-					icon_num=col+ (row*max_colomns);
+					/* Skipping the hidden files . */	
+					if (getbit(files[icon_num]->flags,F_HIDDEN )&& !view_hidden){
+						icon_num++;
+						continue;
+					}
 					icon_rect = nk_rect ( (col* (grid_cfg.icon_h_pad+grid_cfg.icon_width)+grid_cfg.min_l_pad+colomn_pad),
 										  (row* (grid_cfg.icon_width+grid_cfg.icon_v_pad+grid_cfg.icon_txt_pad))+grid_cfg.row_pad,
 										  grid_cfg.icon_width,
@@ -746,27 +766,28 @@ int main (void)
 					{
 						if (nk_input_is_key_down ( (&ctx->input),NK_KEY_SHIFT))
 						{
-							files[icon_num]->isselected=!files[icon_num]->isselected;
+							setbit(files[icon_num]->flags,F_SELECTED,!getbit(files[icon_num]->flags,F_SELECTED));
 						}
 						else
 						{
-							files[icon_num]->isselected=true;
+							setbit(files[icon_num]->flags,F_SELECTED,true);
 							menu.spawn=true;
 						}
 					}
 
 					if (nk_input_is_mouse_click_in_rect (&ctx->input,NK_BUTTON_MIDDLE,icon_rect))
 					{
-						files[icon_num]->isselected=!files[icon_num]->isselected;
+						setbit(files[icon_num]->flags,F_SELECTED,!getbit(files[icon_num]->flags,F_SELECTED));
 					}
 
-					if (files[icon_num]->isselected)
+					if (getbit(files[icon_num]->flags,F_SELECTED))
 					{
 						nk_stroke_rect (&win->buffer,icon_rect,0,2,nk_rgba (250,250,250,32));
 						nk_fill_rect (&win->buffer,icon_rect,0,nk_rgba (0,0,255,32));
 					}
 
 					col++;
+					icon_num++;
 				}
 
 				row++;

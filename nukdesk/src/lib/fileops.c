@@ -61,7 +61,6 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 #include "fileops.h"
-#define DEBUG
 static struct strnode
 {
 	char * name;
@@ -206,7 +205,11 @@ struct fileinfo * new_file (char * d_path,char * name, char * iconidx,magic_t ma
 	file= malloc (sizeof (struct fileinfo));
 	file->icon_load_args.icon_size=ICON_W;
 	file->icon_load_args.generateid=false;
-	file-> isselected=false;
+	file->flags[0] =0 ;
+	setbit(file-> flags,F_SELECTED,false);
+	if (*name == '.') {
+		setbit(file->flags,F_HIDDEN,true);
+	}
 #ifdef DEBUG
 	puts ("\\/<---New file--->\\/");
 	puts (name);
@@ -420,7 +423,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 			{
 				for (int i =0; i<oldfnum; i++)
 				{
-					files[i]->deletded=true;
+					setbit(files[i]->flags,F_DELETED,true);
 				}
 
 				while ( (dir=readdir (desktop_dir.d)) != NULL)
@@ -445,7 +448,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 						{
 							if (strcmp (dir->d_name,files[i]->name) ==0)
 							{
-								files[i]->deletded=false;
+								setbit(files[i]->flags,F_DELETED,false);
 								isnew=false;
 								break;
 							}
@@ -478,7 +481,7 @@ struct fileinfo ** updatefiles (struct dsk_dir desktop_dir,unsigned int * fnum,i
 				{
 					if (files[i]!=NULL)
 					{
-						if (files[i]->deletded==true)
+						if (getbit(files[i]->flags,F_DELETED)==true)
 						{
 							delete_file (files,oldfnum,i);
 

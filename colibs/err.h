@@ -94,7 +94,7 @@ int kqueue_e (const char * line, const char * pfunc, const char * file,const cha
 
 	if (kqid == -1)
 	{
-		die_ve (line, pfunc, file ,cusmsg,"%s\n", "kqueue initialization failure");
+		die_e (line, pfunc, file ,cusmsg,"%s\n", "kqueue initialization failure");
 	}
 
 	return kqid;

@@ -33,6 +33,7 @@
 
 #include <sys/event.h>
 #include "../../../colibs/bool.h"
+#include "../../../colibs/bit.h"
 #include <sys/stat.h>
 #include <threads.h>
 
@@ -50,12 +51,17 @@ enum icon_type
 struct thrd_icon_load_args
 {
 	bool generateid;
-	thrd_t thrd;
 	enum icon_type icon_type;
+	thrd_t thrd;
 	char * icon_path;
 	long int icon_size;
 	unsigned char * return_data;
 } ;
+enum fileinfo_flags {
+	F_SELECTED,
+	F_DELETED,
+	F_HIDDEN,
+};
 
 struct fileinfo
 {
@@ -68,11 +74,10 @@ struct fileinfo
 	struct nk_image * return_image;
 	unsigned int * ic_copy_count;
 	struct thrd_icon_load_args icon_load_args;
-	bool deletded;
-	bool isselected;
 	struct kevent f_change;
 	struct kevent f_event;
 	int fd;
+	unsigned char flags [1];
 };
 
 #endif

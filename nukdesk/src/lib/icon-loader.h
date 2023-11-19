@@ -30,17 +30,17 @@
 #ifndef ICON_LOADER_H
 	#define ICON_LOADER_H
 
+unsigned char * read_buffer_resize_open (char * path,long int image_r_w,long int image_r_h);
+unsigned char * read_buffer_resize (FILE * file,long int image_r_w,long int image_r_h);
+struct nk_image load_buffer_resize (unsigned char * image,unsigned int  image_w,unsigned int image_h, long int image_r_w,long int image_r_h);
+struct nk_image load_image_file_resize (FILE * file,long int image_r_w,long int image_r_h);
+struct nk_image load_image_open_resize (char * path,long int image_r_w,long int image_r_h);
+struct nk_image load_open_icon (char * path, long int icon_size);
+struct nk_image load_file_icon (FILE * file, long int icon_size);
+int thrd_icon_load (void * args);
+int thrd_icon_load_from_extion (void * args);
+void start_thrd_for_icon (struct fileinfo ** files,int fnum,int i);
+void generateid (struct fileinfo * file);
 
-unsigned char * read_buffer_resize_open(char * path,long int image_r_w,long int image_r_h);
-unsigned char * read_buffer_resize(FILE * file,long int image_r_w,long int image_r_h);
-struct nk_image load_buffer_resize(unsigned char * image,unsigned int  image_w,unsigned int image_h, long int image_r_w,long int image_r_h);
-struct nk_image load_image_file_resize(FILE * file,long int image_r_w,long int image_r_h);
-struct nk_image load_image_open_resize(char * path,long int image_r_w,long int image_r_h);
-struct nk_image load_open_icon(char * path, long int icon_size);
-struct nk_image load_file_icon(FILE * file, long int icon_size);
-int thrd_icon_load(void * args);
-int thrd_icon_load_from_extion(void * args);
-void start_thrd_for_icon(struct fileinfo ** files,int fnum,int i);
-void loadicon(struct fileinfo * file);
 
 #endif 
