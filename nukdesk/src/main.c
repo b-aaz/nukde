@@ -329,12 +329,8 @@ void createglctx (struct XWindow * xwin, GLXContext * glContext)
 
 	if (!has_extension (extensions_str, "GLX_ARB_create_context") || !create_context)
 	{
-#ifdef DEBUG
 		fprintf (stderr, "[X11]: glXCreateContextAttribARB() not found...\n");
-#endif
-#ifdef DEBUG
 		fprintf (stderr, "[X11]: ... using old-style GLX context\n");
-#endif
 		*glContext = glXCreateNewContext (xwin->dpy, xwin->fbc, GLX_RGBA_TYPE, 0, True);
 	}
 	else
@@ -357,12 +353,8 @@ void createglctx (struct XWindow * xwin, GLXContext * glContext)
 			attr[1] = 1;
 			attr[3] = 0;
 			gl_err = nk_false;
-#ifdef DEBUG
 			fprintf (stdout, "[X11] Failed to create OpenGL 3.0 context\n");
-#endif
-#ifdef DEBUG
 			fprintf (stdout, "[X11] ... using old-style GLX context!\n");
-#endif
 			*glContext = create_context (xwin->dpy, xwin->fbc, 0, True, attr);
 		}
 	}
@@ -607,7 +599,7 @@ int main (void)
 				write (menu.fd[1],"enable", 6) ;
 			}
 
-			write (menu.fd[1]," gird menu\n\n",10) ;
+			write (menu.fd[1]," grid menu\n\n",10) ;
 			close (menu.fd[1]);
 			menu.spawn=false ;
 			menu.isrunning=true;

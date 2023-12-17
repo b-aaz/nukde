@@ -17,7 +17,7 @@ $(BINDIR)$(BIN):$(OBFILES) $(COOBFILES)
 $(BINDIR)nusort.o: $(LIBS)nusort.c $(LIBS)nusort.h 
 	$(MAKEDIR)
 	cc -c   $(LIBS)nusort.c $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)spawn.h $(LIBS)icon-widget.h  $(LIBS)icon-loader.h $(LIBS)fileops.h $(LIBS)sortfiles.h 
+$(BINDIR)main.o:$(SRC)main.c $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)spawn.h $(LIBS)icon-widget.h  $(LIBS)icon-loader.h $(LIBS)fileops.h $(LIBS)sortfiles.h  $(LIBS)nuklear_xlib_gl3.h
 	$(MAKEDIR)
 	cc -c  $(SRC)main.c  $(LIBCFLAGS) $(CFLAGS) -o $@
 $(BINDIR)ffload.o:$(LIBS)ffload.c $(LIBS)ffload.h $(COLIBS)err.h 
@@ -29,7 +29,7 @@ $(BINDIR)config-parser.o:$(LIBS)config-parser.c $(LIBS)config-parser.h $(COLIBS)
 $(BINDIR)fileops.o:$(LIBS)fileops.c $(LIBS)fileops.h $(COLIBS)err.h $(COLIBS)bool.h  $(LIBS)ffload.h $(LIBS)config-parser.h $(LIBS)fileinfo_type.h 
 	$(MAKEDIR)
 		cc -c  $(LIBS)fileops.c  $(LIBCFLAGS) $(CFLAGS) -o $@
-$(BINDIR)icon-widget.o:$(LIBS)icon-widget.c $(LIBS)icon-widget.h $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)nuklear.h
+$(BINDIR)icon-widget.o:$(LIBS)icon-widget.c $(LIBS)icon-widget.h $(COLIBS)err.h $(COLIBS)bool.h $(COLIBS)nuklear.h $(LIBS)nuklear_xlib_gl3.h
 	$(MAKEDIR)
 		cc -c  $(LIBS)icon-widget.c  $(LIBCFLAGS) $(CFLAGS) -o $@
 $(BINDIR)icon-loader.o:$(LIBS)icon-loader.c $(LIBS)icon-loader.h $(COLIBS)err.h $(COLIBS)nuklear.h $(LIBS)stb_image_resize.h $(LIBS)ffload.h $(LIBS)fileinfo_type.h 

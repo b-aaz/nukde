@@ -52,8 +52,6 @@ unsigned char * read_buffer_resize_open (char * path,long int image_r_w,long int
 	unsigned char * image;
 	unsigned char * image_r;
 	image = ffread_open (path,&image_w,&image_h);
-	/*simage_r=(unsigned char *)malloc(image_w*image_h*4);*/
-	/*stbir_resize_uint8(image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);*/
 	image_r= (unsigned char *) malloc (image_r_w*image_r_h*4);
 	stbir_resize_uint8 (image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);
 	free (image);
@@ -65,8 +63,6 @@ unsigned char * read_buffer_resize (FILE * file,long int image_r_w,long int imag
 	unsigned char * image;
 	unsigned char * image_r;
 	image = ffread (file,&image_w,&image_h);
-	/*image_r=(unsigned char *)malloc(image_w*image_h*4);*/
-	/*stbir_resize_uint8(image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);*/
 	image_r= (unsigned char *) malloc (image_r_w*image_r_h*4);
 	stbir_resize_uint8 (image,image_w,image_h,0,image_r,image_r_w,image_r_h,0,4);
 	free (image);
