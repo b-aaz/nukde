@@ -28,23 +28,26 @@
 */
 
 
-#include <stdio.h>                         // for size_t, NULL
-#include <stdlib.h>                        // for realloc
-#include <sys/time.h>                      // for gettimeofday, timeval
+#include <X11/cursorfont.h>             /* for XC_xterm */
+#include <stdio.h>                         /* for size_t, NULL */
+#include <stdlib.h>                        /* for realloc */
+#include <sys/time.h>                      /* for gettimeofday, timeval */
+#include <string.h>
 
-#include "../../../colibs/bool.h"          // for bool, false, true
+#include "../../../colibs/bool.h"          /* for bool, false, true */
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_IMPLEMENTATION
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
-#include "../../../colibs/nuklear.h"       // for nk_rect, nk_input, nk_edit...
-#include "../../../colibs/nuklear_xlib.h"  // for XWindow
-#include "strrmadd.h"                      // for strrm, stradd
+#define NK_XLIB_IMPLEMENTATION
+#include "../../../colibs/nuklear.h"       /* for nk_rect, nk_input, nk_edit... */
+#include "../../../colibs/nuklear_xlib.h"  /* for XWindow */
+#include "strrmadd.h"                      /* for strrm, stradd */
 #include "widgets.h"
 
-#define CHAR_REPEAT_DELAY 100
+#define KEY_REPEAT_INTERVAL 100
 
 
 static long timestamp (void)
@@ -59,7 +62,7 @@ static long timestamp (void)
 	return (long) ( (long) tv.tv_sec * 1000 + (long) tv.tv_usec / 1000);
 }
 
-static void draw_lock (struct nk_command_buffer * b,struct nk_rect lockpos,int openperc,struct lock_style lockstyle)
+static void draw_lock (struct nk_command_buffer * b,struct nk_rect lockpos,struct lock_style lock_style,unsigned char openperc)
 {
 	struct nk_rect lock;
 	float i1m=0, i1=0,i2m=0, i2=0;
@@ -88,14 +91,14 @@ static void draw_lock (struct nk_command_buffer * b,struct nk_rect lockpos,int o
 			lock.x+lock.w/5,
 			lock.y+lock.h/5-i1,
 			lock.w/6.25,
-			lockstyle.shackle);
+			lock_style.shackle);
 	nk_stroke_line (b,
 			lock.x+lock.w/5*4-i2,
 			lock.y-lock.h/5-i1,
 			lock.x+lock.w/5*4-i2,
 			lock.y-i1,
 			lock.w/6.25,
-			lockstyle.shackle);
+			lock_style.shackle);
 	nk_stroke_curve (b,
 			lock.x+lock.w/5,
 			lock.y-lock.h/5-i1,
@@ -106,22 +109,22 @@ static void draw_lock (struct nk_command_buffer * b,struct nk_rect lockpos,int o
 			lock.x+lock.w/5*4-i2,
 			lock.y-lock.h/5-i1,
 			lock.w/6.25,
-			lockstyle.shackle);
+			lock_style.shackle);
 	nk_fill_rect (b,
 			lock,
 			lock.w/6.25,
-			lockstyle.body);
+			lock_style.body);
 	nk_stroke_rect (b,
 			lock,
 			lock.w/6.25,
 			lock.h/100,
-			lockstyle.body);
+			lock_style.body);
 	nk_fill_circle (b,
 			nk_rect (lock.x+lock.w/2-lock.w/10,
 				lock.y+lock.h/2-lock.h/10,
 				lock.w/5,
 				lock.h/5),
-			lockstyle.key_hole);
+			lock_style.key_hole);
 	nk_fill_triangle (b,
 			lock.x+lock.w/2,
 			lock.y+lock.h/2-lock.h/10,
@@ -129,25 +132,25 @@ static void draw_lock (struct nk_command_buffer * b,struct nk_rect lockpos,int o
 			lock.y+lock.h/5*4,
 			lock.x+lock.w/5*2,
 			lock.y+lock.h/5*4,
-			lockstyle.key_hole);
+			lock_style.key_hole);
 }
-static void input_mouse_has_clicked_even_times_in_rect (struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * downup)
+static void input_mouse_click_latch_in_rect (struct nk_input * in,enum nk_buttons id,struct nk_rect rect,bool * latch)
 {
 	if (nk_input_is_mouse_click_in_rect (in,id,rect))
 	{
-		*downup=!*downup;
+		*latch=!*latch;
 	}
 }
 
-static void lock_icon (struct nk_context * ctx,struct nk_rect lockpos,short int speed,int * lockopeness,bool * downup,struct lock_style lockstyle)
+static void lock_icon (struct nk_context * ctx,struct nk_rect lockpos,unsigned char speed,unsigned char * lockopeness,bool * latch,struct lock_style lock_style)
 {
 	struct nk_input * in;
 	struct nk_command_buffer * b;
 	in = &ctx->input;
 	b = &ctx->current->buffer;
-	input_mouse_has_clicked_even_times_in_rect (in,NK_BUTTON_LEFT,lockpos,downup);
+	input_mouse_click_latch_in_rect (in,NK_BUTTON_LEFT,lockpos,latch);
 
-	if (*downup==0)
+	if (*latch==0)
 	{
 		if (*lockopeness>0)
 		{
@@ -167,14 +170,9 @@ static void lock_icon (struct nk_context * ctx,struct nk_rect lockpos,short int 
 		*lockopeness=100;
 	}
 
-	if (*lockopeness<0)
-	{
-		*lockopeness=0;
-	}
-
-	draw_lock (b,lockpos,*lockopeness,lockstyle);
+	draw_lock (b,lockpos,lock_style,*lockopeness);
 }
-void password_input (struct nk_context * ctx,struct passwords_input_data * data,struct passwords_input_style ipstyle,struct password * password,struct XWindow xw,Cursor cu)
+void pass_edit (struct nk_context * ctx,struct pass_state * state,struct pass_edit_style pe_style,struct alstr * password,char * hint,struct XWindow xw,Cursor cu)
 {
 	struct nk_window * win;
 	struct nk_style * style;
@@ -201,19 +199,19 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 	maxchn =
 		(int)
 		(
-		 (widpos.w - wids_end_buff_space-ipstyle.text_arias_start_padding)
-		 /ipstyle.space_betwen_charecters
+		 (widpos.w - wids_end_buff_space-pe_style.text_aria_left_margin)
+		 /pe_style.em_width
 		);
 
-	text_aria.x = widpos.x + ipstyle.text_arias_start_padding;
+	text_aria.x = widpos.x + pe_style.text_aria_left_margin;
 	text_aria.y = widpos.y + widpos.h/2-row_height/2;
 	text_aria.h = row_height;
 	shiftvalue=1;
-	text_aria.w = (password->length - data->shift) *ipstyle.space_betwen_charecters;
+	text_aria.w = (password->length - state->shift) *pe_style.em_width;
 
-	if (text_aria.w>maxchn*ipstyle.space_betwen_charecters)
+	if (text_aria.w>maxchn*pe_style.em_width)
 	{
-		text_aria.w=maxchn*ipstyle.space_betwen_charecters;
+		text_aria.w=maxchn*pe_style.em_width;
 	}
 
 	/* Changing the X cursor from "I beam" to default when we enter the
@@ -239,7 +237,7 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 					widpos.h
 			     ))
 		{
-			data->cursor_pos= (password->length-data->shift);
+			state->cursor_pos= (password->length-state->shift);
 		}
 
 		if (NK_INBOX (
@@ -251,147 +249,144 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 					widpos.h
 			     ))
 		{
-			data->cursor_pos = text_aria.x;
+			state->cursor_pos = text_aria.x;
 
-			for (; in->mouse.pos.x > data->cursor_pos; data->cursor_pos += ipstyle.space_betwen_charecters)
+			for (; in->mouse.pos.x > state->cursor_pos; state->cursor_pos += pe_style.em_width)
 			{
 			}
 
-			data->cursor_pos -= text_aria.x;
-			data->cursor_pos /= ipstyle.space_betwen_charecters;
-			data->cursor_pos--;
+			state->cursor_pos -= text_aria.x;
+			state->cursor_pos /= pe_style.em_width;
+			state->cursor_pos--;
 		}
 
 		if (!nk_input_is_mouse_hovering_rect (in, widpos))
 		{
-			data->active = false;
+			state->active = false;
 		}
 		else
 		{
-			data->active = true;
+			state->active = true;
 		}
 	}
 
-	nk_fill_rect (&win->buffer, widpos, editstyle->rounding,ipstyle.background_color);
+	nk_fill_rect (&win->buffer, widpos, editstyle->rounding,pe_style.background_color);
 
-	if (data->active)
-	{
-		nk_stroke_rect (&win->buffer, widpos,editstyle->rounding,editstyle->border,ipstyle.fild_activecolor);
-
-		if (nk_input_is_key_down (in,NK_KEY_DEL) &&data->cursor_pos+data->shift<password->length)
-		{
 			thist=timestamp();
+	if (state->active)
+	{
+		nk_stroke_rect (&win->buffer, widpos,editstyle->rounding,editstyle->border,pe_style.fild_activecolor);
 
-			if (thist-data->lastt>=CHAR_REPEAT_DELAY)
+		if (nk_input_is_key_down (in,NK_KEY_DEL) &&state->cursor_pos+state->shift<password->length)
+		{
+
+			if (thist-state->lastt>=KEY_REPEAT_INTERVAL)
 			{
-				strrm (password->buf,password->length, data->cursor_pos+data->shift, 1);
+				strrm (password->str,password->length, state->cursor_pos+state->shift, 1);
 				password->length--;
-				data->lastt=thist;
+				state->lastt=thist;
 			}
 		}
 
-		if (nk_input_is_key_down (in,NK_KEY_RIGHT) &&data->cursor_pos+data->shift<password->length)
+		if (nk_input_is_key_down (in,NK_KEY_RIGHT) &&state->cursor_pos+state->shift<password->length)
 		{
-			thist=timestamp();
 
-			if (thist-data->lastt>=CHAR_REPEAT_DELAY)
+			if (thist-state->lastt>=KEY_REPEAT_INTERVAL)
 			{
-				data->cursor_pos++;
+				state->cursor_pos++;
 
-				if (data->cursor_pos>maxchn)
+				if (state->cursor_pos>maxchn)
 				{
-					data->shift+=shiftvalue;
-					data->cursor_pos-=shiftvalue;
+					state->shift+=shiftvalue;
+					state->cursor_pos-=shiftvalue;
 				}
 
-				data->lastt=thist;
+				state->lastt=thist;
 			}
 		}
 
 		if (nk_input_is_key_down (in, NK_KEY_LEFT))
 		{
-			thist=timestamp();
 
-			if (thist-data->lastt>=CHAR_REPEAT_DELAY && (data->cursor_pos||data->shift))
+			if (thist-state->lastt>=KEY_REPEAT_INTERVAL && (state->cursor_pos||state->shift))
 			{
-				if (data->shift!=0&&data->cursor_pos==0)
+				if (state->shift!=0&&state->cursor_pos==0)
 				{
-					data->shift-=shiftvalue;
-					data->cursor_pos+=shiftvalue;
+					state->shift-=shiftvalue;
+					state->cursor_pos+=shiftvalue;
 				}
 
-				data->cursor_pos--;
-				data->lastt=thist;
+				state->cursor_pos--;
+				state->lastt=thist;
 			}
 		}
 
-		if (nk_input_is_key_down (in, NK_KEY_BACKSPACE) && (data->cursor_pos||data->shift))
+		if (nk_input_is_key_down (in, NK_KEY_BACKSPACE) && (state->cursor_pos||state->shift))
 		{
-			thist=timestamp();
 
-			if (thist-data->lastt>=CHAR_REPEAT_DELAY)
+			if (thist-state->lastt>=KEY_REPEAT_INTERVAL)
 			{
-				strrm (password->buf,password->length, data->cursor_pos - 1+data->shift, 1);
+				strrm (password->str,password->length, state->cursor_pos - 1+state->shift, 1);
 
-				if (data->shift)
+				if (state->shift)
 				{
-					data->shift-=shiftvalue;
+					state->shift-=shiftvalue;
 				}
 				else
 				{
-					data->cursor_pos--;
+					state->cursor_pos--;
 				}
 
 				password->length--;
-				data->lastt=thist;
+				state->lastt=thist;
 
-				if (data->shift!=0&&data->cursor_pos==0)
+				if (state->shift!=0&&state->cursor_pos==0)
 				{
-					data->shift-=shiftvalue;
-					data->cursor_pos+=shiftvalue;
+					state->shift-=shiftvalue;
+					state->cursor_pos+=shiftvalue;
 				}
 			}
 		}
 
 		if (in->keyboard.text_len)
 		{
-			if (password->length >= password->bufsize)
+			if (password->length >= password->allocated)
 			{
-				password->buf = realloc (password->buf, (password->length + 32));
-				password->bufsize =+32;
+				password->str = realloc (password->str, (password->length + 32));
+				password->allocated =+32;
 			}
 
-			stradd (password->buf, password->length, in->keyboard.text,in->keyboard.text_len, data->cursor_pos+data->shift);
-			data->cursor_pos+=in->keyboard.text_len;
+			stradd (password->str, password->length, in->keyboard.text,in->keyboard.text_len, state->cursor_pos+state->shift);
+			state->cursor_pos+=in->keyboard.text_len;
 			password->length+=in->keyboard.text_len;
 
-			if (data->cursor_pos>maxchn-1)
+			if (state->cursor_pos>maxchn-1)
 			{
-				data->cursor_pos-=in->keyboard.text_len;
-				data->shift+=in->keyboard.text_len;
+				state->cursor_pos-=in->keyboard.text_len;
+				state->shift+=in->keyboard.text_len;
 			}
 		}
 
-		nk_edit_draw_text (&win->buffer, &style->edit,text_aria.x+ (data->cursor_pos * ipstyle.space_betwen_charecters),text_aria.y,
-				0," ", 1, row_height, style->font,ipstyle.cursor_color,ipstyle.cursor_color, nk_true);
+		nk_edit_draw_text (&win->buffer, &style->edit,text_aria.x+ (state->cursor_pos * pe_style.em_width),text_aria.y,
+				0," ", 1, row_height, style->font,pe_style.cursor_color,pe_style.cursor_color, nk_true);
 	}
 	else
 	{
-		nk_stroke_rect (&win->buffer, widpos, editstyle->rounding, editstyle->border,ipstyle.fild_inactivecolor);
+		nk_stroke_rect (&win->buffer, widpos, editstyle->rounding, editstyle->border,pe_style.fild_inactivecolor);
 	}
 
-	for (s = 0; ( (s < (password->length-data->shift))  && (s < maxchn)); s++)
+	for (s = 0; ( (s < (password->length-state->shift))  && (s < maxchn)); s++)
 	{
 		nk_edit_draw_text
-			( &win->buffer ,&style->edit ,text_aria.x+ (s*ipstyle.space_betwen_charecters) ,text_aria.y	,0	,data->showpassword?&password->buf[s+data->shift]:"*" ,1		,row_height	,style->font
-			  ,s==data->cursor_pos && data->active	?
-			  ipstyle.pass_textcolor
+			( &win->buffer ,&style->edit ,text_aria.x+ (s*pe_style.em_width) ,text_aria.y	,0	,state->showpassword?&password->str[s+state->shift]:"*" ,1		,row_height	,style->font
+			  ,s==state->cursor_pos && state->active	?
+			  pe_style.pass_textcolor
 			  :
-			  ipstyle.pass_backgroundcolor
-			  ,s==data->cursor_pos && data->active	?
-			  ipstyle.pass_backgroundcolor
+			  pe_style.pass_bgcolor
+			  ,s==state->cursor_pos && state->active	?
+			  pe_style.pass_bgcolor
 			  :
-			  ipstyle.pass_textcolor
+			  pe_style.pass_textcolor
 			  ,nk_true
 			);
 	}
@@ -400,20 +395,20 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 	if (!password->length)
 	{
 		label_aria.y=text_aria.y;
-		label_aria.x=text_aria.x+ipstyle.space_betwen_charecters;
-		label_aria.w=ipstyle.space_betwen_charecters*maxchn;
+		label_aria.x=text_aria.x+pe_style.em_width;
+		label_aria.w=pe_style.em_width*maxchn;
 		label_aria.h=row_height;
 		nk_draw_text (
 				&win->buffer,
 				label_aria,
-				ipstyle.label+1,
-				nk_strlen (ipstyle.label)-1,
+				hint+1,
+				nk_strlen (hint)-1,
 				style->font,
-				ipstyle.label_backgroundcolor,
-				ipstyle.label_textcolor
+				pe_style.hint_bgcolor,
+				pe_style.hint_textcolor
 			     );
 
-		if (data->active)
+		if (state->active)
 		{
 			nk_edit_draw_text (
 					&win->buffer,
@@ -421,12 +416,12 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 					text_aria.x,
 					text_aria.y,
 					0,
-					ipstyle.label,
+					hint,
 					1,
 					row_height,
 					style->font,
-					ipstyle.cursor_color,
-					ipstyle.label_textcolor,
+					pe_style.cursor_color,
+					pe_style.hint_textcolor,
 					nk_true
 					);
 		}
@@ -438,22 +433,22 @@ void password_input (struct nk_context * ctx,struct passwords_input_data * data,
 					text_aria.x,
 					text_aria.y,
 					0,
-					ipstyle.label,
+					hint,
 					1,
 					row_height,
 					style->font,
-					ipstyle.label_backgroundcolor,
-					ipstyle.label_textcolor,
+					pe_style.hint_bgcolor,
+					pe_style.hint_textcolor,
 					nk_false
 					);
 		}
 	}
 
-	/* Showing the little interactive lock icon at the right side of the input 
-	 * field . 
+	/* Draws the little interactive lock icon at the right side of the
+	 * input field . 
 	 */
 	lockspos=nk_rect (widpos.x+widpos.w-widpos.h,widpos.y,widpos.h,widpos.h);
-	lock_icon (ctx,lockspos,ipstyle.lockstyle.lock_speed,&data->lockopeness,&data->showpassword,ipstyle.lockstyle);
+	lock_icon (ctx,lockspos,pe_style.lock_style.lock_speed,&state->lockopeness,&state->showpassword,pe_style.lock_style);
 }
 void warning_widget ( struct nk_context* ctx, struct warning_style ws, char * warning) {
 
@@ -462,10 +457,10 @@ void warning_widget ( struct nk_context* ctx, struct warning_style ws, char * wa
 	struct nk_rect warnwidpos;
 	struct nk_text warningtext;
 	win = ctx->current;
-	warningtext.text =ws.text_forground;
-	warningtext.background =ws.text_background;
+	warningtext.text =ws.text_color;
+	warningtext.background =ws.text_bgcolor;
 	warningtext.padding =nk_vec2(0,0);
 	nk_widget (&warnwidpos,ctx);
-	nk_fill_rect (&win->buffer, warnwidpos,ws.rounding,ws.background );
+	nk_fill_rect (&win->buffer, warnwidpos,ws.rounding,ws.bgcolor );
 	nk_widget_text (&win->buffer,warnwidpos,warning,nk_strlen (warning),&warningtext,NK_TEXT_CENTERED,ctx->style.font);
 }

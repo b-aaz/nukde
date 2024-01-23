@@ -27,48 +27,45 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <X11/cursorfont.h>             // for XC_xterm
-#include <stdio.h>                      // for fclose, snprintf, fprintf
-#include <stdlib.h>                     // for NULL, free, malloc
-#include <string.h>                     // for memset
-#include <sys/time.h>                   // for gettimeofday, timeval
-#include <sys/unistd.h>                 // for F_OK
-#include <time.h>                       // for nanosleep, time, time_t, time...
-#include <unistd.h>                     // for access, execvp, NULL
+#include <X11/cursorfont.h>             /* for XC_xterm */
+#include <stdio.h>                      /* for fclose, snprintf, fprintf */
+#include <stdlib.h>                     /* for NULL, free, malloc */
+#include <string.h>                     /* for memset */
+#include <sys/time.h>                   /* for gettimeofday, timeval */
+#include <sys/unistd.h>                 /* for F_OK */
+#include <time.h>                       /* for nanosleep, time, time_t, time... */
+#include <unistd.h>                     /* for access, execvp, NULL */
 
-#include "./lib/auth.h"                 // for auth
-#include "../../colibs/bool.h"     // for true, bool, false
+#include "./lib/auth.h"                 /* for auth */
+#include "../../colibs/bool.h"     /* for true, bool, false */
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_XLIB_IMPLEMENTATION
-#define NK_ASSERT
-#define INCLUDE_STYLE
-/*#define NK_INPUT_MAX 2 */
+/* #define INCLUDE_STYLE */
 #include "../../colibs/nuklear.h"
-#include "../../colibs/nuklear_xlib.h"  // for XWindow, nk_xfont_create, nk_...
-#include "./lib/widgets.h"              // for passwords_input_style, password
+#include "../../colibs/nuklear_xlib.h"  /* for XWindow, nk_xfont_create, nk_... */
+#include "./lib/widgets.h"              
 
 #define DTIME          20
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 110
 #define CHANCES   3
-/*#define SHIFT 5*/
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
-#define NUERRCOLORRE "\e[0m"
-#define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
-#define WARN_COLOR "\e[38;2;255;121;0;2m"
-#include "../../colibs/err.h"           // for die, fopen
+#define NUERRCOLORRE "\x1B[0m"
+#define NUERRCOLOR "\x1B[38;2;237;67;55;1;5m"
+#define WARN_COLOR "\x1B[38;2;255;121;0;2m"
+#include "../../colibs/err.h"           /* for die, fopen */
 
 #define DELAY   30
-#define WARNFILE_LOCATION "/usr/share/security/nuksu"
-#define RESTC "\e[0m"
+#define LOCKFILE_LOCATION "/usr/share/security/nuksu"
+#define RESTC "\x1B[0m"
+#define INCLUDE_STYLE
 #ifdef INCLUDE_STYLE
-	#include "./style.c"                    // for set_style, theme
+	#include "./style.c"                    /* for set_style, theme */
 #endif
 static long timestamp (void)
 {
@@ -91,31 +88,54 @@ static void sleep_for (long t)
 
 	while (-1 == nanosleep (&req, &req));
 }
-void read_warning_file (short int * attempts, time_t * last_exceeding_time)
+void read_lock_file (short int * attempts, time_t * last_exceeding_time)
 {
-	FILE * warning_file;
-	warning_file=fopen (WARNFILE_LOCATION,"r");
+	FILE * lock_file;
+	lock_file=fopen (LOCKFILE_LOCATION,"r");
 
-	if (warning_file==NULL)
+	if (lock_file==NULL)
 	{
-		die ("%s\n","Can not open the warning file");
+		die ("%s\n","Can not open the lock file");
 	}
 
-	fscanf (warning_file,"%hd\n%ld",attempts,last_exceeding_time);
-	fclose (warning_file);
+	fscanf (lock_file,"%hd\n%ld",attempts,last_exceeding_time);
+	fclose (lock_file);
 }
-void write_warning_file (short int attempts, time_t  last_exceeding_time)
+void write_lock_file (short int attempts, time_t  last_exceeding_time)
 {
-	FILE * warning_file;
-	warning_file=fopen (WARNFILE_LOCATION,"w");
+	FILE * lock_file;
+	lock_file=fopen (LOCKFILE_LOCATION,"w");
 
-	if (warning_file==NULL)
+	if (lock_file==NULL)
 	{
-		die ("%s\n","Can not open the warning file");
+		die ("%s\n","Can not open the lock file");
 	}
 
-	fprintf (warning_file,"%d\n%ld",attempts,last_exceeding_time);
-	fclose (warning_file);
+	fprintf (lock_file,"%d\n%ld",attempts,last_exceeding_time);
+	fclose (lock_file);
+}
+
+void warning_default_style (struct warning_style * warning_style) {
+			warning_style->bgcolor = nk_rgb (255,40,24);
+			warning_style->rounding = 4;
+			warning_style->text_color= nk_rgb (0,0,0);
+			warning_style->text_bgcolor = warning_style->bgcolor;
+}
+void pass_edit_default_style (struct pass_edit_style * pds) {
+			pds->cursor_color=nk_rgb (255,255,255);
+			pds->background_color=nk_rgb (68,71,90);
+			pds->fild_inactivecolor=nk_rgb (200, 150, 100);
+			pds->fild_activecolor=nk_rgb (100, 150, 200);
+			pds->pass_textcolor=nk_rgb (255,255,255);
+			pds->pass_bgcolor=nk_rgb (68,71,90);
+			pds->hint_bgcolor=nk_rgb (68,71,90);
+			pds->hint_textcolor=nk_rgb(30,30,30);
+			pds->text_aria_left_margin=7;
+			pds->em_width=6;
+			pds->lock_style.lock_speed=10;
+			pds->lock_style.shackle=nk_rgb (255,215,0);
+			pds->lock_style.body=nk_rgb (0,0,0);
+			pds->lock_style.key_hole=nk_rgb (255,255,255);
 }
 
 int main (int argc,char * argv[])
@@ -128,11 +148,12 @@ int main (int argc,char * argv[])
 	time_t last_exceeding_time=0;
 	short int attempts=0;
 	struct XWindow xw;
-	struct password password;
-	struct passwords_input_data pd ;
+	struct alstr password;
+	struct pass_state pd ;
 	char warning [100];
 	time_t timeofnow;
 	memset (&pd,0,sizeof (pd));
+	memset (&password,0,sizeof (password));
 	pd.active=true;
 
 	if (argc==1)
@@ -140,19 +161,17 @@ int main (int argc,char * argv[])
 		die ("%s\n","No programs specified ");
 	}
 
-	read_warning_file (&attempts, &last_exceeding_time);
+	read_lock_file (&attempts, &last_exceeding_time);
 			time (&timeofnow);
 	if (timeofnow-last_exceeding_time < DELAY){
 		 warn=true;
 	}
-
-
-	password.bufsize = 2;
+	password.allocated = 2;
 	password.length=0;
-	password.buf = malloc (password.bufsize * sizeof (char));
+	password.str = malloc (password.allocated * sizeof (char));
+
 	memset (&xw, 0, sizeof xw);
 	xw.dpy = XOpenDisplay (NULL);
-
 	if (!xw.dpy)
 	{ die ("%s\n","Could not open a display; perhaps $DISPLAY is not set?"); }
 
@@ -215,64 +234,44 @@ int main (int argc,char * argv[])
 
 		if (nk_begin (ctx, "nuksu", nk_rect (0, 0,xw.width,xw.height),0))
 		{
-			struct nk_window * win;
-			struct nk_style * style;
-			bool timeupdated;
+			bool newsecond;
 			time_t timeoflastframe;
 			struct warning_style warning_style;
-			struct passwords_input_style  pds;
+			struct pass_edit_style  pds;
+			char * hintstr = "Enter password";
 			enum auth_return auth_return_val;
 			Cursor cu;
 			cu = XCreateFontCursor (xw.dpy,XC_xterm);
-			win = ctx->current;
-			style = &ctx->style;
-			warning_style.background = nk_rgb (255,40,24);
-			warning_style.rounding = 4;
-			warning_style.text_forground= nk_rgb (0,0,0);
-			warning_style.text_background = warning_style.background;
+			pass_edit_default_style(&pds);
+			warning_default_style(&warning_style);
 			nk_layout_row_dynamic (ctx, 30, 1);
-			pds.cursor_color=nk_rgb (255,255,255);
-			pds.background_color=nk_rgb (68,71,90);
-			pds.fild_inactivecolor=nk_rgb (200, 150, 100);
-			pds.fild_activecolor=nk_rgb (100, 150, 200);
-			pds.pass_textcolor=nk_rgb (255,255,255);
-			pds.pass_backgroundcolor=nk_rgb (68,71,90);
-			pds.label_textcolor=nk_rgb (0,0,0);
-			pds.label_backgroundcolor=nk_rgb (68,71,90);
-			pds.text_arias_start_padding=7;
-			pds.space_betwen_charecters=6;
-			pds.lockstyle.lock_speed=10;
-			pds.lockstyle.shackle=nk_rgb (255,215,0);
-			pds.lockstyle.body=nk_rgb (0,0,0);
-			pds.lockstyle.key_hole=nk_rgb (255,255,255);
-			pds.label="Enter password";
-			password_input (ctx,&pd,pds,&password,xw,cu);
+			pass_edit(ctx,&pd,pds,&password,hintstr,xw,cu);
 			timeoflastframe = timeofnow ;
 			time (&timeofnow);
 
 			if (timeofnow != timeoflastframe)
 			{
-				timeupdated = true ;
+				newsecond = true ;
 			}
 			else
 			{
-				timeupdated = false ;
+				newsecond = false ;
 			}
 
 			nk_layout_row_dynamic (ctx, 25, 1);
 
 			if (nk_button_label (ctx, "Go!") || nk_input_is_key_pressed (&ctx->input, NK_KEY_ENTER))
 			{
-				read_warning_file (&attempts, &last_exceeding_time);
+				read_lock_file (&attempts, &last_exceeding_time);
 
 				if ( (timeofnow-last_exceeding_time) >DELAY)
 				{
 					if (attempts!=0)
 					{
-						write_warning_file (0,  last_exceeding_time);
+						write_lock_file (0,  last_exceeding_time);
 					}
 
-					auth_return_val =auth (password.buf,"/etc/master.passwd");
+					auth_return_val =auth (password.str,"/etc/master.passwd");
 
 					switch (auth_return_val)
 					{
@@ -294,18 +293,18 @@ int main (int argc,char * argv[])
 								last_exceeding_time=timeofnow;
 							}
 
-							write_warning_file (attempts,  last_exceeding_time);
+							write_lock_file (attempts,  last_exceeding_time);
 							snprintf (warning,100,"Wrong password %d more attempts",CHANCES-attempts);
 							break;
 						case AUTH_LOCKED :
 							puts (WARN_COLOR"Account is locked"RESTC);
 							warn=true;
-							snprintf (warning,100,"Account is locked",CHANCES-attempts);
+							snprintf (warning,100,"Account is locked");
 							break;
 						case AUTH_NOLOGIN :
 							puts (WARN_COLOR"Account does not allow logins"RESTC);
 							warn=true;
-							snprintf (warning,100,"Account does not allow logins",CHANCES-attempts);
+							snprintf (warning,100,"Account does not allow logins");
 							break;
 					}
 				}
@@ -318,7 +317,7 @@ int main (int argc,char * argv[])
 
 			if (warn)
 			{
-				if (timeupdated)
+				if (newsecond)
 				{
 					if (timeofnow-last_exceeding_time<DELAY)
 					{
@@ -347,7 +346,7 @@ int main (int argc,char * argv[])
 	}
 
 cleanup:
-	free (password.buf);
+	free (password.str);
 	nk_xfont_del (xw.dpy, xw.font);
 	nk_xlib_shutdown();
 	XUnmapWindow (xw.dpy, xw.win);

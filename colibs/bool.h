@@ -32,16 +32,19 @@
  * other compilers 
  */
 #ifndef NUKDE_BOOL
-	#define NUKDE_BOOL
+#	define NUKDE_BOOL
 
 #ifdef __GNUC__
-	#define NOPAD __attribute__((packed))
+#	define NOPAD __attribute__((packed))
 #else 
-	#define NOPAD
+#	define NOPAD
 #endif
 
 typedef 
-NOPAD
+#ifdef PACKEDBOOL
+	NOPAD
+#endif
 enum
 {false=0, true=!false} bool;
+
 #endif

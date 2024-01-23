@@ -32,19 +32,19 @@
 /*#define AUTH_DEBG*/
 #define USERNAME "root"
 #define USERNAMEL 4
-#include <stdio.h>                 // for fseek, size_t, fclose, fread, ftell
-#include <stdlib.h>                // for free, NULL, malloc
-#include <string.h>                // for strcmp, strncmp, strncpy, strchr
-#include <unistd.h>                // for crypt, NULL
+#include <stdio.h>                 /* for fseek, size_t, fclose, fread, ftell */
+#include <stdlib.h>                /* for free, NULL, malloc */
+#include <string.h>                /* for strcmp, strncmp, strncpy, strchr */
+#include <unistd.h>                /* for crypt, NULL */
 
 #define REDEFFUNCS
 #define NUERRREDEFFUNCS
 #define NUERRSTDIO
 #define NUERRSTDLIB
-#define NUERRCOLORRE "\e[0m"
-#define NUERRCOLOR "\e[38;2;237;67;55;1;5m"
-#include "../../../colibs/bool.h"  // for true, bool, false
-#include "../../../colibs/err.h"   // for fopen
+#define NUERRCOLORRE "\x1B[0m"
+#define NUERRCOLOR "\x1B[38;2;237;67;55;1;5m"
+#include "../../../colibs/bool.h"  /* for true, bool, false */
+#include "../../../colibs/err.h"   /* for fopen */
 #include "auth.h"
 
 /* Goes through the passwd file opened in a char string named |buffer|
@@ -66,8 +66,8 @@ static char * get_user_record (char * buffer)
 		{
 			if (strncmp (buffer+char_index, USERNAME":", USERNAMEL+1) == 0)
 			{
-				buffer += char_index ;
 				size_t linelength = 0;
+				buffer += char_index ;
 
 				while (buffer[linelength] != '\n')
 				{
@@ -144,21 +144,21 @@ static char * get_hash (char * user_record)
 /* Warning : Return value of this function should be freed when not needed . */
 static char * get_papersalt (char * hash)
 {
-	size_t papersaltl;
-	char * papersalt;
-
 	if (strncmp (hash, "*LOCKED*",8) ==0)
 	{
 		return NULL ;
 	}
-
-	char * last_dollar_sign_pos;
-	last_dollar_sign_pos = strrchr (hash,'$');
-	papersaltl = last_dollar_sign_pos - hash ;
-	papersalt = malloc ( (papersaltl+1) * sizeof (char));
-	strncpy (papersalt,hash,papersaltl);
-	papersalt [papersaltl]= '\0';
-	return papersalt;
+	{
+		size_t papersaltl;
+		char * papersalt; 		
+		char * last_dollar_sign_pos;
+		last_dollar_sign_pos = strrchr (hash,'$');
+		papersaltl = last_dollar_sign_pos - hash ;
+		papersalt = malloc ( (papersaltl+1) * sizeof (char));
+		strncpy (papersalt,hash,papersaltl);
+		papersalt [papersaltl]= '\0';
+		return papersalt;
+	}
 }
 /* Authenticates the user /USERNAME/ with the password |enterdpasswd| with the
  * user record in the file |passwd_fileloction| .
@@ -174,9 +174,7 @@ enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
 	char * papersalt=NULL;
 	char * rootusershash=NULL;
 	char * enterdpasswd_hash=NULL;
-	size_t paperl=0;
-	size_t papersaltl=0;
-	bool ret ;
+	enum auth_return ret ;
 	passwd_file=fopen (passwd_fileloction, "r");
 	fseek (passwd_file, 0L, SEEK_END);
 	passwd_filesize = ftell (passwd_file);
@@ -211,11 +209,11 @@ enum auth_return auth (char * enterdpasswd,char * passwd_fileloction)
 #ifdef AUTH_DEBG
 	printf ("Hash of the entered password:\n"
 			"%s\n"
-			"The real hash:\n"
+			"The users hash:\n"
 			"%s\n"
 			,enterdpasswd_hash,rootusershash);
 #endif
-	ret = strcmp (enterdpasswd_hash, rootusershash) == 0 ? true : false ;
+	ret = strcmp (enterdpasswd_hash, rootusershash) == 0 ? AUTH_SUCCESSES : AUTH_FAIL;
 	free (rootusershash);
 	return ret;
 }

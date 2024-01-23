@@ -32,54 +32,52 @@
 	#define WIDGETS_H
 
 
-struct password
+struct alstr
 {
-	char * buf;
-	size_t bufsize;
+	size_t allocated;
 	size_t length;
+	char * str;
 };
-struct passwords_input_data
+struct pass_state
 {
 
-	bool active ;
+	long lastt;
 	size_t cursor_pos;
 	size_t shift;
+	unsigned char lockopeness;
 	bool showpassword ;
-	long lastt;
-	int lockopeness;
+	bool active ;
 };
 
 struct lock_style
 {
-	short int lock_speed;
-
 	struct nk_color shackle;
 	struct nk_color body;
 	struct nk_color key_hole;
+	unsigned char lock_speed;
 };
-struct passwords_input_style
+struct pass_edit_style
 {
-	struct lock_style lockstyle;
+	struct lock_style lock_style;
 	struct nk_color cursor_color;
 	struct nk_color background_color;
-	struct nk_color label_textcolor;
-	struct nk_color label_backgroundcolor;
+	struct nk_color hint_textcolor;
+	struct nk_color hint_bgcolor;
 	struct nk_color pass_textcolor;
-	struct nk_color pass_backgroundcolor;
+	struct nk_color pass_bgcolor;
 	struct nk_color fild_activecolor;
 	struct nk_color fild_inactivecolor;
-	short unsigned int space_betwen_charecters;
-	short unsigned int text_arias_start_padding;
-	char * label;
+	short unsigned int em_width;
+	short unsigned int text_aria_left_margin;
 };
 struct warning_style
 {
-	struct nk_color background;
+	struct nk_color bgcolor;
 	float rounding;
-	struct nk_color text_background;
-	struct nk_color text_forground;
+	struct nk_color text_bgcolor;
+	struct nk_color text_color;
 };
-void password_input (struct nk_context * ctx,struct passwords_input_data * data,struct passwords_input_style ipstyle,struct password * password,struct XWindow xw,Cursor cu);
+void pass_edit(struct nk_context * ctx,struct pass_state * data,struct pass_edit_style ipstyle,struct alstr * password,char * hint,struct XWindow xw,Cursor cu);
 
 void warning_widget (struct nk_context*ctx, struct warning_style ws, char * warning) ;
 #endif

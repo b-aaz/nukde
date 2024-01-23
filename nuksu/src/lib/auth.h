@@ -37,7 +37,7 @@ enum auth_return
 	AUTH_SUCCESSES = 1,	/* Authentication was successful .	*/
 	AUTH_NOPASS = 2 ,	/* Account does not have a password .	*/
 	AUTH_LOCKED = -1 ,	/* Account is temporarily locked .	*/
-	AUTH_NOLOGIN = -2 ,	/* Account does not allow logins .	*/
+	AUTH_NOLOGIN = -2 	/* Account does not allow logins .	*/
 };
 
 enum auth_return auth (char * enterdpasswd,char * passwd_fileloction);

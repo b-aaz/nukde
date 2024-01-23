@@ -28,8 +28,8 @@ static void die_ve (const char * line, const char * pfunc, const char * file, co
 
 static void errno_die (const char * line, const char * pfunc, const char * file,const char * cusmsg, const char * fmt, ...)
 {
-	fprintf (stderr, NUERRCOLOR "%s: " NUERRCOLORRE, strerror (errno));
 	va_list lastwords;
+	fprintf (stderr, NUERRCOLOR "%s: " NUERRCOLORRE, strerror (errno));
 	va_start (lastwords, fmt);
 	die_ve (line, pfunc, file ,cusmsg,fmt, lastwords);
 	va_end (lastwords);

@@ -27,7 +27,7 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdlib.h>  // for size_t
+#include <stdlib.h>  /* for size_t */
 /*
  * These functions DO NOT handle the memory reallocation themselves .
  */
